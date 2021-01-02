@@ -82,7 +82,7 @@ Require this plugin using `local nvim_fzf = require('fzf')`
     local result = fzf("fd")
     ```
 
-  * if **table**: a list of strings to string convertables
+  * if **table**: a list of strings or string convertables
 
     ```lua
     local result = fzf({1, 2, "item"})
