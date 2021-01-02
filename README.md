@@ -223,34 +223,6 @@ local function readfile(name)
   return data
 end
 
-local function iterator()
-
-  local co
-
-  local loop_co = coroutine.create(function ()
-    for _, rtp in ipairs(runtimepaths) do
-      local tagfile = table.concat({rtp, "doc", "tags"}, "/")
-      local success, data = pcall(readfile, tagfile)
-      if success then
-        for i, line in ipairs(vim.split(data, "\n")) do
-          local tag = vim.split(line, "\t")[1]
-          coroutine.resume(co, tag)
-          print(" done", coroutine.yield())
-        end
-      end
-    end
-    coroutine.resume(co, nil)
-  end)
-
-  return function()
-    co = coroutine.running()
-    coroutine.resume(loop_co)
-    local res =  coroutine.yield() 
-    print(coroutine.status(loop_co))
-    return res
-  end
-end
-
 local function deal_with_tags(tagfile, cb)
   local co = coroutine.running()
   coroutine.wrap(function ()
