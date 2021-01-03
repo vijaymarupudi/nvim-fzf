@@ -142,10 +142,12 @@ local function centered_floating_window()
 end
 
 local fzf = function (...)
+  local win = vim.api.nvim_get_current_win()
   local b1, b2 = unpack(centered_floating_window())
   local results = raw_fzf(...)
   vim.cmd("bw! " .. b1)
   vim.cmd("bw! " .. b2)
+  vim.api.nvim_set_current_win(win)
   return results
 end
 
