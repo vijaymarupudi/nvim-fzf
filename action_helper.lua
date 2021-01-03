@@ -22,14 +22,14 @@ local success, errmsg = pcall(function ()
     return usr_func(fzf_selection, fzf_lines, fzf_columns)
   ]], {function_id, args, environ.FZF_PREVIEW_LINES, environ.FZF_PREVIEW_COLUMNS})
 
-  if usrresult == nil then
-    -- do nothing
-  elseif type(usrresult) == "string" then
+  if type(usrresult) == "string" then
     print(usrresult)
   elseif type(usrresult) == "table" then
     print(table.concat(usrresult, "\n"))
   else
-    error("Invalid user function return type")
+    -- not error because vim seems to return userdata when lua is returning
+    -- nil. These types are currently not reliable.
+    -- error("Invalid user function return type")
   end
   vim.fn.chanclose(chan_id)
 end)

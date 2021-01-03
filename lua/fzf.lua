@@ -41,7 +41,7 @@ local function raw_fzf(contents, options)
     if type(contents) == "string" then
       command = string.format("%s | %s", contents, command)
     else
-      command = command .. " < " .. string.format("'%s'", vim.fn.escape(fifotmpname, "'"))
+      command = command .. " < " .. vim.fn.shellescape(fifotmpname)
     end
   end
 
@@ -49,7 +49,7 @@ local function raw_fzf(contents, options)
     command = command .. " " .. options
   end
 
-  command = command .. " > " .. string.format("'%s'", vim.fn.escape(outputtmpname, "'"))
+  command = command .. " > " .. vim.fn.shellescape(outputtmpname)
 
   vim.fn.system({'mkfifo', fifotmpname})
   local fd
@@ -131,7 +131,9 @@ end
 local function provided_win_fzf(contents, options)
   local win = vim.api.nvim_get_current_win()
   local output = raw_fzf(contents, options)
+  local buf = vim.api.nvim_get_current_buf()
   vim.api.nvim_win_close(win, true)
+  vim.api.nvim_buf_delete(buf, { force = true })
   return output
 end
 
