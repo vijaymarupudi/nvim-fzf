@@ -20,7 +20,7 @@ local success, errmsg = pcall(function ()
     local fzf_columns = luaargs[4]
     local usr_func = require"fzf.registry".get_func(function_id)
     return usr_func(fzf_selection, fzf_lines, fzf_columns)
-  ]], {function_id, args, environ.FZF_PREVIEW_LINES, environ.FZF_PREVIEW_COLUMNS})
+  ]], {function_id, args, tonumber(environ.FZF_PREVIEW_LINES), tonumber(environ.FZF_PREVIEW_COLUMNS)})
 
   if type(usrresult) == "string" then
     print(usrresult)

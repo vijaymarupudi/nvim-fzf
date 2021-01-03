@@ -138,31 +138,15 @@ local function provided_win_fzf(contents, options)
 end
 
 local function centered_floating_window()
-  local lines = vim.o.lines
-  local columns = vim.o.columns
-
-  local round = vim.fn.round
-
-  local height = round(0.8 * lines)
-  local width = round(0.8 * columns)
-
-  vim.api.nvim_open_win(
-    vim.api.nvim_create_buf(false, true),
-    true,
-    {
-      relative = "editor",
-      width = width,
-      height = height,
-      row = 0.1 * round(lines),
-      col = 0.1 * round(columns),
-      style = "minimal"
-    }
-  )
+  return vim.fn["nvim_fzf#create_centered_window"]()
 end
 
 local fzf = function (...)
-  centered_floating_window()
-  return provided_win_fzf(...)
+  local b1, b2 = unpack(centered_floating_window())
+  local results = raw_fzf(...)
+  vim.cmd("bw! " .. b1)
+  vim.cmd("bw! " .. b2)
+  return results
 end
 
 return {
