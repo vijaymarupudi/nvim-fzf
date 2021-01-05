@@ -364,9 +364,3 @@ have a Windows machine, so I cannot test it. It should be possible using
 the Luajit FFI and the
 [`CreateNamedPipeA`](https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-createnamedpipea)
 function from the win32 api.
-
-## Todo
-
-Currently this plugin allows for neovim to speak to fzf. A similar
-technique can be used to get fzf to speak to neovim, for use in previews
-and actions. Contributions welcome!
