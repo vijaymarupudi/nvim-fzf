@@ -19,6 +19,18 @@ coroutine.wrap(function()
 end)()
 ```
 
+## Table of contents
+
+* [Usage](#usage)
+* [Installation](#installation)
+* [Important information](#important-information)
+* [API Functions](#api-functions)
+* [Main API](#main-api)
+* [Action API](#action-api)
+* [Examples](#examples)
+* [How it works](#how-it-works)
+* [Todo](#todo)
+
 ## Installation
 
 ```vimscript
