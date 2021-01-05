@@ -20,6 +20,8 @@ coroutine.wrap(function()
 end)()
 ```
 
+![](gifs/example_1.gif)
+
 ## Table of contents
 
 * [Usage](#usage)
@@ -195,6 +197,8 @@ coroutine.wrap(function()
 end)()
 ```
 
+![](gifs/example_2.gif)
+
 `require("fzf.actions").action(fn)`
 
 * `fn(selections, fzf_lines, fzf_cols)`: A function that takes a
@@ -213,6 +217,8 @@ end)()
 ## Examples
 
 **Filetype picker**
+
+![](gifs/example_3.gif)
 
 ```lua
 local fts = {
@@ -235,6 +241,8 @@ end)()
 ```
 
 **Helptags picker** (asynchronous, uses `--expect`)
+
+![](gifs/example_4.gif)
 
 ```lua
 local runtimepaths = vim.api.nvim_list_runtime_paths()
