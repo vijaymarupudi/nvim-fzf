@@ -6,6 +6,8 @@ Allow for full asynchronicity for UI speed and usability.
 
 Supports Linux and MacOS.
 
+![](gifs/example_2.gif)
+
 ## Usage
 
 ```lua
