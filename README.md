@@ -154,6 +154,49 @@ Require this plugin using `local nvim_fzf = require('fzf')`
   end
   ```
 
+## Action API
+
+Sometimes you want to use neovim information in fzf (such as previews of
+non file buffers, bindings to delete buffers, or change colorschemes).
+fzf expects a shell command for these parameters. Making your own shell
+command and setting up RPC can be cumbersome. This plugin provides an
+easy API to run a lua function / closure in response these actions.
+
+```lua
+local fzf = require "fzf".fzf
+local action = require "fzf.actions".action
+
+coroutine.wrap(function()
+  -- items is a table of selected or hovered fzf items
+  local shell = action(function(items, fzf_lines, fzf_cols)
+    -- only one item will be hovered at any time, so get the selection
+    -- out and convert it to a number
+    local buf = tonumber(items[1])
+
+    -- you can return either a string or a table to show in the preview
+    -- window
+    return vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+  end)
+
+  fzf(vim.api.nvim_list_bufs(), "--preview " .. shell)
+end)()
+```
+
+`require("fzf.actions").action(fn)`
+
+* `fn(selections, fzf_lines, fzf_cols)`: A function that takes a
+  selection, performs an action, and optionally returns either a `table`
+  or `string` to print to stdout.
+
+  * `selections`: a `table` of strings selected in fzf
+  * `fzf_lines`: number of lines in the preview window i.e.
+    `$FZF_PREVIEW_LINES`
+  * `fzf_cols`: number of cols in the preview window i.e.
+    `$FZF_PREVIEW_COLS`
+
+* **return value**: a shell-escaped string to append to the fzf options
+    for fzf to run.
+
 ## Examples
 
 **Filetype picker**
