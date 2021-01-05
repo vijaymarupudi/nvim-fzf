@@ -4,9 +4,15 @@ A lua api for using fzf in neovim >= 0.5.
 
 Allow for full asynchronicity for UI speed and usability.
 
-Supports Linux and MacOS.
+Does not conflict with [`fzf.vim`](https://github.com/junegunn/fzf.vim).
+
 
 ![](gifs/example_2.gif)
+
+## Requirements
+
+* Linux, MacOS, BSD
+* `fzf` binary
 
 ## Usage
 
