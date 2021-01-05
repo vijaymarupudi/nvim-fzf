@@ -1,6 +1,6 @@
 # nvim-fzf
 
-A lua api for using fzf in neovim.
+A lua api for using fzf in neovim >= 0.5.
 
 Allow for full asynchronicity for UI speed and usability.
 
