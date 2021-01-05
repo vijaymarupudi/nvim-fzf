@@ -160,7 +160,7 @@ Sometimes you want to use neovim information in fzf (such as previews of
 non file buffers, bindings to delete buffers, or change colorschemes).
 fzf expects a shell command for these parameters. Making your own shell
 command and setting up RPC can be cumbersome. This plugin provides an
-easy API to run a lua function / closure in response these actions.
+easy API to run a lua function / closure in response to these actions.
 
 ```lua
 local fzf = require "fzf".fzf
