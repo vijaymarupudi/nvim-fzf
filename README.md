@@ -4,6 +4,8 @@ A lua api for using fzf in neovim.
 
 Allow for full asynchronicity for UI speed and usability.
 
+Supports Linux and MacOS.
+
 ## Usage
 
 ```lua
