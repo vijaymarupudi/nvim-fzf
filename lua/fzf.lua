@@ -33,6 +33,10 @@ end
 -- can be called repeatedly for values. The latter can use coroutines for async
 -- behavior.
 local function raw_fzf(contents, options)
+
+  if not coroutine.running() then
+    error("Please run function in a coroutine")
+  end
   local command = "fzf"
   local fifotmpname = vim.fn.tempname()
   local outputtmpname = vim.fn.tempname()
