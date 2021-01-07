@@ -26,10 +26,10 @@ local success, errmsg = pcall(function ()
     print(usrresult)
   elseif type(usrresult) == "table" then
     print(table.concat(usrresult, "\n"))
+  elseif usrresult == vim.NIL then
+    -- do nothing
   else
-    -- not error because vim seems to return userdata when lua is returning
-    -- nil. These types are currently not reliable.
-    -- error("Invalid user function return type")
+    error("Invalid user function return type")
   end
   vim.fn.chanclose(chan_id)
 end)
