@@ -1,10 +1,12 @@
 local registry = require("fzf.registry")
 
+local M = {}
+
 local function escape(str)
   return vim.fn.shellescape(str)
 end
 
-local function raw_action(fn)
+function M.raw_action(fn)
   local nvim_fzf_directory = vim.g.nvim_fzf_directory
   local shell_script_path = string.format("%s/action_helper.sh", nvim_fzf_directory)
   local id = registry.register_func(fn)
@@ -13,12 +15,9 @@ local function raw_action(fn)
   return action_string, id
 end
 
-local function action(fn)
+function M.action(fn)
   local action_string, id = raw_action(fn)
   return escape(action_string), id
 end
 
-return {
-  action = action,
-  raw_action = raw_action
-}
+return M

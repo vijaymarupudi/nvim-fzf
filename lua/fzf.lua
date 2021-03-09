@@ -1,4 +1,7 @@
 local uv = vim.loop
+local float = require('fzf.floating_window')
+
+local FZF = {}
 
 local function coroutine_callback(func)
   local co = coroutine.running()
@@ -32,8 +35,7 @@ end
 -- contents can be either a table with tostring()able items, or a function that
 -- can be called repeatedly for values. The latter can use coroutines for async
 -- behavior.
-local function raw_fzf(contents, options)
-
+function FZF.raw_fzf(contents, options)
   if not coroutine.running() then
     error("Please run function in a coroutine")
   end
@@ -120,7 +122,7 @@ local function raw_fzf(contents, options)
             end
 
             cb(nil)
-            
+
           end)
         end, fd)
       end
@@ -132,32 +134,31 @@ local function raw_fzf(contents, options)
   return coroutine.yield()
 end
 
-local function provided_win_fzf(contents, options)
+function FZF.provided_win_fzf(contents, options)
   local win = vim.api.nvim_get_current_win()
-  local output = raw_fzf(contents, options)
+  local output = FZF.raw_fzf(contents, options)
   local buf = vim.api.nvim_get_current_buf()
   vim.api.nvim_win_close(win, true)
   vim.api.nvim_buf_delete(buf, { force = true })
   return output
 end
 
-local function centered_floating_window()
-  return vim.fn["nvim_fzf#create_centered_window"]()
-end
-
-local fzf = function (...)
+function FZF.fzf_relative(...)
   local win = vim.api.nvim_get_current_win()
-  local b1, b2 = unpack(centered_floating_window())
-  local results = raw_fzf(...)
-  vim.cmd("bw! " .. b1)
-  vim.cmd("bw! " .. b2)
+  local buf = float.create_relative()
+  local results = FZF.raw_fzf(...)
+  vim.cmd("bw! " .. buf)
   vim.api.nvim_set_current_win(win)
   return results
 end
 
-return {
-  centered_floating_window = centered_floating_window,
-  provided_win_fzf = provided_win_fzf,
-  raw_fzf = raw_fzf,
-  fzf = fzf
-}
+function FZF.fzf(...)
+  local win = vim.api.nvim_get_current_win()
+  local buf = float.create_absolute()
+  local results = FZF.raw_fzf(...)
+  vim.cmd("bw! " .. buf)
+  vim.api.nvim_set_current_win(win)
+  return results
+end
+
+return FZF

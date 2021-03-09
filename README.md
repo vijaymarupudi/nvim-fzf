@@ -22,7 +22,7 @@ Handcrafted useful commands using the library at
 local fzf = require("fzf")
 
 coroutine.wrap(function()
-  local result = fzf.fzf({"choice 1", "choice 2"}, "--ansi")  
+  local result = fzf.fzf({"choice 1", "choice 2"}, "--ansi")
   -- result is a list of lines that fzf returns, if the user has chosen
   if result then
     print(result[1])
@@ -55,13 +55,13 @@ Plug 'vijaymarupudi/nvim-fzf'
 **You should run all the functions in this module in a coroutine. This
 allows for an easy api**
 
-Example: 
+Example:
 
 ```lua
 local fzf = require("fzf")
 
 coroutine.wrap(function()
-  local result = fzf.fzf({"choice 1", "choice 2"})  
+  local result = fzf.fzf({"choice 1", "choice 2"})
   if result then
     print(result[1])
   end
@@ -81,6 +81,20 @@ Require this plugin using `local fzf = require('fzf')`
 
   ```lua
   local results = fzf.fzf({"Option 1", "Option 2"}, "--nth 1")
+  if results then
+    -- do something
+  end
+  ```
+
+* `fzf.fzf_relative(contents, options)`
+
+  An fzf function that opens a centered floating window relative to the current split and closes it
+  after the user has chosen.
+
+  Example:
+
+  ```lua
+  local results = fzf.fzf_relative({"Option 1", "Option 2"}, "--nth 1")
   if results then
     -- do something
   end
@@ -113,7 +127,7 @@ respected. You can override them using command line switches or
 
 * `contents`
 
-  * if **string**: a shell command 
+  * if **string**: a shell command
 
     ```lua
     local result = fzf("fd")
@@ -337,7 +351,7 @@ local fzf_function = function (cb)
     -- wrapping to make all the file reading concurrent
     coroutine.wrap(function ()
       deal_with_tags(tagfile, cb)
-      total_done = total_done + 1 
+      total_done = total_done + 1
       if total_done == #runtimepaths then
         cb(nil)
       end
@@ -346,7 +360,7 @@ local fzf_function = function (cb)
 end
 
 coroutine.wrap(function ()
-  local result = fzf(fzf_function, "--nth 1 --ansi --expect=ctrl-t,ctrl-s,ctrl-v") 
+  local result = fzf(fzf_function, "--nth 1 --ansi --expect=ctrl-t,ctrl-s,ctrl-v")
   if not result then
     return
   end
