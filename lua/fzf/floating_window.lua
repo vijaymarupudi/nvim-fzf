@@ -7,8 +7,8 @@ function M.create_absolute()
   local width = math.min(columns - 4, math.max(80, columns - 20))
   local height = math.min(lines - 4, math.max(20, lines - 10))
 
-  local top = ((lines - height) / 2) -1
-  local left = (columns - width) / 2
+  local top = math.floor(((lines - height) / 2) - 1)
+  local left = math.floor((columns - width) / 2)
 
   local opts = { relative = 'editor', row = top, col = left, width = width, height = height, style = 'minimal' }
 
@@ -23,8 +23,8 @@ function M.create_relative()
   local columns, lines = vim.api.nvim_win_get_width(0), vim.api.nvim_win_get_height(0)
   local row, col = unpack(vim.api.nvim_win_get_position(0))
 
-  local width = math.floor(columns * (8 / 10))
-  local height = math.min(lines - 4, 20)
+  local width = math.min(columns - 4, math.max(80, columns - 20))
+  local height = math.min(lines - 4, math.max(20, lines - 10))
 
   local top = math.floor((row + (lines / 2)) - (height / 2))
   local left = math.floor((col + (columns / 2)) - (width / 2))
