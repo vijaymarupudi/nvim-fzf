@@ -19,10 +19,10 @@ Handcrafted useful commands using the library at
 ## Usage
 
 ```lua
-local nvim_fzf = require("fzf")
+local fzf = require("fzf")
 
 coroutine.wrap(function()
-  local result = nvim_fzf.fzf({"choice 1", "choice 2"}, "--ansi")  
+  local result = fzf.fzf({"choice 1", "choice 2"}, "--ansi")  
   -- result is a list of lines that fzf returns, if the user has chosen
   if result then
     print(result[1])
@@ -58,10 +58,10 @@ allows for an easy api**
 Example: 
 
 ```lua
-local nvim_fzf = require("fzf")
+local fzf = require("fzf")
 
 coroutine.wrap(function()
-  local result = nvim_fzf.fzf({"choice 1", "choice 2"})  
+  local result = fzf.fzf({"choice 1", "choice 2"})  
   if result then
     print(result[1])
   end
@@ -70,15 +70,23 @@ end)()
 
 ## API Functions
 
-Require this plugin using `local nvim_fzf = require('fzf')`
+Require this plugin using `local fzf = require('fzf')`
 
+* `fzf.fzf(contents, options)`
 
-* `nvim_fzf.raw_fzf(contents, options)`
+  An fzf function that opens a centered floating window and closes it
+  after the user has chosen.
 
-  An fzf function that runs fzf in the current window. See `Main API`
-  for more details about the general API.
+  Example:
 
-* `nvim_fzf.provided_win_fzf(contents, options)`
+  ```lua
+  local results = fzf.fzf({"Option 1", "Option 2"}, "--nth 1")
+  if results then
+    -- do something
+  end
+  ```
+
+* `fzf.provided_win_fzf(contents, options)`
 
   Runs fzf in the current window, and closes it after the user has
   chosen. Allows for the user to provide the fzf window.
@@ -86,14 +94,18 @@ Require this plugin using `local nvim_fzf = require('fzf')`
   ```lua
   -- for a vertical fzf
   vim.cmd [[ vertical new ]]
-  nvim_fzf.provided_win_fzf(contents, options)
+  fzf.provided_win_fzf(contents, options)
   ```
 
-* `nvim_fzf.fzf(contents, options)`
+* `fzf.raw_fzf(contents, options)`
 
-  An fzf function that opens a centered floating window and closes it
-  after the user has chosen.
+  An fzf function that runs fzf in the current window. See `Main API`
+  for more details about the general API.
 
+**NOTE**: nvim-fzf inherits nvim's environmental variables. This means
+that options in `$FZF_DEFAULT_OPTS` and other environment variables are
+respected. You can override them using command line switches or
+`:let-environment`.
 
 ## Main API
 
