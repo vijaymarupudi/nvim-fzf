@@ -1,14 +1,6 @@
 local M = {}
 
 
--- so that the default nvim theme doesn't get that awful pink color
-local function set_bg_highlight_group()
-  if not vim.g.colors_name or
-    vim.g.colors_name == "default" then
-    vim.cmd [[set winhl=Normal:Normal]]
-  end
-end
-
 -- Create a centered floating window
 function M.create_absolute(width, height, window_on_create)
   local columns, lines = vim.o.columns, vim.o.lines
@@ -29,7 +21,6 @@ function M.create_absolute(width, height, window_on_create)
   local bufnr = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_open_win(bufnr, true, opts)
 
-  set_bg_highlight_group()
   window_on_create()
 
   return bufnr
@@ -56,7 +47,6 @@ function M.create_relative(width, height, window_on_create)
   local bufnr = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_open_win(bufnr, true, opts)
 
-  set_bg_highlight_group()
   window_on_create()
 
   return bufnr

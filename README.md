@@ -423,3 +423,23 @@ have a Windows machine, so I cannot test it. It should be possible using
 the Luajit FFI and the
 [`CreateNamedPipeA`](https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-createnamedpipea)
 function from the win32 api.
+
+## FAQ
+
+* How do I change the color of the default floating window spawned by
+  `fzf.fzf`?
+
+  You need to set the `winhl` option for the default window. You can do
+  this for each command or globally by using the `window_on_create`
+  option.
+
+  This makes the background of the popup window the same color of the
+  backgrounds of normal windows. Example:
+
+  ```lua
+  require("fzf").default_window_options = {
+    window_on_create = function()
+      vim.cmd("set winhl=Normal:Normal")
+    end
+  }
+  ```
