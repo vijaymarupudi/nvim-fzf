@@ -35,7 +35,7 @@ end
 -- contents can be either a table with tostring()able items, or a function that
 -- can be called repeatedly for values. The latter can use coroutines for async
 -- behavior.
-function FZF.raw_fzf(contents, options)
+function FZF.raw_fzf(contents, fzf_cli_args)
   if not coroutine.running() then
     error("Please run function in a coroutine")
   end
@@ -51,8 +51,8 @@ function FZF.raw_fzf(contents, options)
     end
   end
 
-  if options then
-    command = command .. " " .. options
+  if fzf_cli_args then
+    command = command .. " " .. fzf_cli_args
   end
 
   command = command .. " > " .. vim.fn.shellescape(outputtmpname)
@@ -134,28 +134,59 @@ function FZF.raw_fzf(contents, options)
   return coroutine.yield()
 end
 
-function FZF.provided_win_fzf(contents, options)
+function FZF.provided_win_fzf(contents, fzf_cli_args)
   local win = vim.api.nvim_get_current_win()
-  local output = FZF.raw_fzf(contents, options)
+  local output = FZF.raw_fzf(contents, fzf_cli_args)
   local buf = vim.api.nvim_get_current_buf()
   vim.api.nvim_win_close(win, true)
   vim.api.nvim_buf_delete(buf, { force = true })
   return output
 end
 
-function FZF.fzf_relative(...)
+-- for convenience window functions
+-- currently adds a border by default
+local function process_options(fzf_cli_args, window_options)
+
+  if not window_options then
+    window_options = {}
+  end
+
+  if not fzf_cli_args then
+    fzf_cli_args = ""
+  end
+
+  -- parentheses are important here
+  if not (window_options.border == false) then
+    fzf_cli_args = "--border " .. fzf_cli_args
+  end
+
+  window_options.fzf_cli_args = fzf_cli_args
+
+  return window_options
+
+end
+
+function FZF.fzf_relative(contents, fzf_cli_args, window_options)
+
+  local opts = process_options(fzf_cli_args, window_options)
+
   local win = vim.api.nvim_get_current_win()
-  local buf = float.create_relative()
-  local results = FZF.raw_fzf(...)
+  local buf = float.create_relative(opts.width, opts.height)
+  local results = FZF.raw_fzf(contents, opts.fzf_cli_args)
   vim.cmd("bw! " .. buf)
   vim.api.nvim_set_current_win(win)
   return results
 end
 
-function FZF.fzf(...)
+
+function FZF.fzf(contents, fzf_cli_args, window_options)
+
+  local opts = process_options(fzf_cli_args, window_options)
+
   local win = vim.api.nvim_get_current_win()
-  local buf = float.create_absolute()
-  local results = FZF.raw_fzf(...)
+  local buf = float.create_absolute(opts.width, opts.height)
+
+  local results = FZF.raw_fzf(contents, opts.fzf_cli_args)
   vim.cmd("bw! " .. buf)
   vim.api.nvim_set_current_win(win)
   return results

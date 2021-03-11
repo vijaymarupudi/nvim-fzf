@@ -72,7 +72,7 @@ end)()
 
 Require this plugin using `local fzf = require('fzf')`
 
-* `fzf.fzf(contents, options)`
+* `fzf.fzf(contents, fzf_cli_args, window_options)`
 
   An fzf function that opens a centered floating window and closes it
   after the user has chosen.
@@ -86,7 +86,26 @@ Require this plugin using `local fzf = require('fzf')`
   end
   ```
 
-* `fzf.fzf_relative(contents, options)`
+  `window_options`: an optional **table**, taking optional
+  settings
+
+  * `window_options.width` (number): width of the window
+  * `window_options.height` (number): height of the window
+  * `window_options.border` (boolean, default: true): whether to display
+    a border
+
+  Example:
+
+  ```lua
+  local results = fzf.fzf({"Option 1", "Option 2"},
+    "--nth 1",
+    { width = 30, height = 10, border = false })
+  if results then
+    -- do something
+  end
+  ```
+
+* `fzf.fzf_relative(contents, fzf_cli_args, window_options)`
 
   An fzf function that opens a centered floating window relative to the current split and closes it
   after the user has chosen.
@@ -100,7 +119,10 @@ Require this plugin using `local fzf = require('fzf')`
   end
   ```
 
-* `fzf.provided_win_fzf(contents, options)`
+  `window_options`: an optional **table** taking optional
+  settings. See `fzf.fzf` for information on settings.
+
+* `fzf.provided_win_fzf(contents, fzf_cli_args)`
 
   Runs fzf in the current window, and closes it after the user has
   chosen. Allows for the user to provide the fzf window.
@@ -108,10 +130,10 @@ Require this plugin using `local fzf = require('fzf')`
   ```lua
   -- for a vertical fzf
   vim.cmd [[ vertical new ]]
-  fzf.provided_win_fzf(contents, options)
+  fzf.provided_win_fzf(contents, fzf_cli_args)
   ```
 
-* `fzf.raw_fzf(contents, options)`
+* `fzf.raw_fzf(contents, fzf_cli_args)`
 
   An fzf function that runs fzf in the current window. See `Main API`
   for more details about the general API.
@@ -123,7 +145,7 @@ respected. You can override them using command line switches or
 
 ## Main API
 
-`fzf(contents, options)`
+`fzf(contents, fzf_cli_args)`
 
 * `contents`
 
@@ -170,7 +192,7 @@ respected. You can override them using command line switches or
     end)
     ```
 
-* `options`: **string**, A list of command line options for fzf.
+* `fzf_cli_args`: **string**, A list of command line arguments for fzf.
 
     Can use to expect different key bindings (e.g. `--expect
     ctrl-t,ctrl-v`), previews, and coloring.
@@ -247,8 +269,8 @@ end)()
   * `fzf_cols`: number of cols in the preview window i.e.
     `$FZF_PREVIEW_COLS`
 
-* **return value**: a shell-escaped string to append to the fzf options
-    for fzf to run.
+* **return value**: a shell-escaped string to append to the fzf command
+  line arguments (`fzf_cli_args`) for fzf to run.
 
 ## Examples
 
