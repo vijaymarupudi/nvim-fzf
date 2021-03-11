@@ -93,6 +93,15 @@ Require this plugin using `local fzf = require('fzf')`
   * `window_options.height` (number): height of the window
   * `window_options.border` (boolean, default: true): whether to display
     a border
+  * `window_options.window_on_create` (function): a function that's
+    called after the window is created. Use this function to configure
+    the various properties of the window such as background highlight
+    group.
+
+  **NOTE**: `window_options` inherits its properties from
+  `fzf.default_window_options`. If you'd like to change the defaults for
+  all nvim-fzf functions, modify this table e.g.
+  `require("fzf").default_window_options = { border = false }`
 
   Example:
 
@@ -107,8 +116,8 @@ Require this plugin using `local fzf = require('fzf')`
 
 * `fzf.fzf_relative(contents, fzf_cli_args, window_options)`
 
-  An fzf function that opens a centered floating window relative to the current split and closes it
-  after the user has chosen.
+  An fzf function that opens a centered floating window relative to the
+  current split and closes it after the user has chosen.
 
   Example:
 

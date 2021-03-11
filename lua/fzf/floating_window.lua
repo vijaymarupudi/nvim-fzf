@@ -1,7 +1,16 @@
 local M = {}
 
+
+-- so that the default nvim theme doesn't get that awful pink color
+local function set_bg_highlight_group()
+  if not vim.g.colors_name or
+    vim.g.colors_name == "default" then
+    vim.cmd [[set winhl=Normal:Normal]]
+  end
+end
+
 -- Create a centered floating window
-function M.create_absolute(width, height)
+function M.create_absolute(width, height, window_on_create)
   local columns, lines = vim.o.columns, vim.o.lines
 
   if not width then
@@ -20,14 +29,14 @@ function M.create_absolute(width, height)
   local bufnr = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_open_win(bufnr, true, opts)
 
-  -- setting background to the normal background color
-  vim.cmd [[set winhl=Normal:Normal]]
+  set_bg_highlight_group()
+  window_on_create()
 
   return bufnr
 end
 
 -- Create a centered floating window relative to the current split
-function M.create_relative(width, height)
+function M.create_relative(width, height, window_on_create)
   local columns, lines = vim.api.nvim_win_get_width(0), vim.api.nvim_win_get_height(0)
   local row, col = unpack(vim.api.nvim_win_get_position(0))
 
@@ -47,8 +56,8 @@ function M.create_relative(width, height)
   local bufnr = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_open_win(bufnr, true, opts)
 
-  -- setting background to the normal background color
-  vim.cmd [[set winhl=Normal:Normal]]
+  set_bg_highlight_group()
+  window_on_create()
 
   return bufnr
 end

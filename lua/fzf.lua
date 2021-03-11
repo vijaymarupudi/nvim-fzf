@@ -143,6 +143,27 @@ function FZF.provided_win_fzf(contents, fzf_cli_args)
   return output
 end
 
+
+-- can be overwritten by the user
+FZF.default_window_options = {}
+
+local nvim_fzf_default_window_options = {
+  width = nil,
+  height = nil,
+  border = true,
+  window_on_create = function() end
+}
+
+local function merge_tables(tables)
+  local ret = {}
+  for _, t in ipairs(tables) do
+    for key, value in pairs(t) do
+      ret[key] = value
+    end
+  end
+  return ret
+end
+
 -- for convenience window functions
 -- currently adds a border by default
 local function process_options(fzf_cli_args, window_options)
@@ -155,23 +176,30 @@ local function process_options(fzf_cli_args, window_options)
     fzf_cli_args = ""
   end
 
+  local final_window_options = merge_tables {
+    nvim_fzf_default_window_options,
+    FZF.default_window_options,
+    window_options
+  }
+
   -- parentheses are important here
-  if not (window_options.border == false) then
+  if not (final_window_options.border == false) then
     fzf_cli_args = "--border " .. fzf_cli_args
   end
 
-  window_options.fzf_cli_args = fzf_cli_args
+  final_window_options.fzf_cli_args = fzf_cli_args
 
-  return window_options
+  return final_window_options
 
 end
+
 
 function FZF.fzf_relative(contents, fzf_cli_args, window_options)
 
   local opts = process_options(fzf_cli_args, window_options)
 
   local win = vim.api.nvim_get_current_win()
-  local buf = float.create_relative(opts.width, opts.height)
+  local buf = float.create_relative(opts.width, opts.height, opts.window_on_create)
   local results = FZF.raw_fzf(contents, opts.fzf_cli_args)
   vim.cmd("bw! " .. buf)
   vim.api.nvim_set_current_win(win)
@@ -184,7 +212,7 @@ function FZF.fzf(contents, fzf_cli_args, window_options)
   local opts = process_options(fzf_cli_args, window_options)
 
   local win = vim.api.nvim_get_current_win()
-  local buf = float.create_absolute(opts.width, opts.height)
+  local buf = float.create_absolute(opts.width, opts.height, opts.window_on_create)
 
   local results = FZF.raw_fzf(contents, opts.fzf_cli_args)
   vim.cmd("bw! " .. buf)
