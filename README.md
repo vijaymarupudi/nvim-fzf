@@ -22,7 +22,7 @@ Handcrafted useful commands using the library at
 local fzf = require("fzf")
 
 coroutine.wrap(function()
-  local result = fzf.fzf({"choice 1", "choice 2"}, "--ansi")  
+  local result = fzf.fzf({"choice 1", "choice 2"}, "--ansi")
   -- result is a list of lines that fzf returns, if the user has chosen
   if result then
     print(result[1])
@@ -55,13 +55,13 @@ Plug 'vijaymarupudi/nvim-fzf'
 **You should run all the functions in this module in a coroutine. This
 allows for an easy api**
 
-Example: 
+Example:
 
 ```lua
 local fzf = require("fzf")
 
 coroutine.wrap(function()
-  local result = fzf.fzf({"choice 1", "choice 2"})  
+  local result = fzf.fzf({"choice 1", "choice 2"})
   if result then
     print(result[1])
   end
@@ -72,7 +72,7 @@ end)()
 
 Require this plugin using `local fzf = require('fzf')`
 
-* `fzf.fzf(contents, options)`
+* `fzf.fzf(contents, fzf_cli_args, window_options)`
 
   An fzf function that opens a centered floating window and closes it
   after the user has chosen.
@@ -86,7 +86,52 @@ Require this plugin using `local fzf = require('fzf')`
   end
   ```
 
-* `fzf.provided_win_fzf(contents, options)`
+  `window_options`: an optional **table**, taking optional
+  settings
+
+  * `window_options.width` (number): width of the window
+  * `window_options.height` (number): height of the window
+  * `window_options.border` (boolean, default: true): whether to display
+    a border
+  * `window_options.window_on_create` (function): a function that's
+    called after the window is created. Use this function to configure
+    the various properties of the window such as background highlight
+    group.
+
+  **NOTE**: `window_options` inherits its properties from
+  `fzf.default_window_options`. If you'd like to change the defaults for
+  all nvim-fzf functions, modify this table e.g.
+  `require("fzf").default_window_options = { border = false }`
+
+  Example:
+
+  ```lua
+  local results = fzf.fzf({"Option 1", "Option 2"},
+    "--nth 1",
+    { width = 30, height = 10, border = false })
+  if results then
+    -- do something
+  end
+  ```
+
+* `fzf.fzf_relative(contents, fzf_cli_args, window_options)`
+
+  An fzf function that opens a centered floating window relative to the
+  current split and closes it after the user has chosen.
+
+  Example:
+
+  ```lua
+  local results = fzf.fzf_relative({"Option 1", "Option 2"}, "--nth 1")
+  if results then
+    -- do something
+  end
+  ```
+
+  `window_options`: an optional **table** taking optional
+  settings. See `fzf.fzf` for information on settings.
+
+* `fzf.provided_win_fzf(contents, fzf_cli_args)`
 
   Runs fzf in the current window, and closes it after the user has
   chosen. Allows for the user to provide the fzf window.
@@ -94,10 +139,10 @@ Require this plugin using `local fzf = require('fzf')`
   ```lua
   -- for a vertical fzf
   vim.cmd [[ vertical new ]]
-  fzf.provided_win_fzf(contents, options)
+  fzf.provided_win_fzf(contents, fzf_cli_args)
   ```
 
-* `fzf.raw_fzf(contents, options)`
+* `fzf.raw_fzf(contents, fzf_cli_args)`
 
   An fzf function that runs fzf in the current window. See `Main API`
   for more details about the general API.
@@ -109,11 +154,11 @@ respected. You can override them using command line switches or
 
 ## Main API
 
-`fzf(contents, options)`
+`fzf(contents, fzf_cli_args)`
 
 * `contents`
 
-  * if **string**: a shell command 
+  * if **string**: a shell command
 
     ```lua
     local result = fzf("fd")
@@ -156,7 +201,7 @@ respected. You can override them using command line switches or
     end)
     ```
 
-* `options`: **string**, A list of command line options for fzf.
+* `fzf_cli_args`: **string**, A list of command line arguments for fzf.
 
     Can use to expect different key bindings (e.g. `--expect
     ctrl-t,ctrl-v`), previews, and coloring.
@@ -233,8 +278,8 @@ end)()
   * `fzf_cols`: number of cols in the preview window i.e.
     `$FZF_PREVIEW_COLS`
 
-* **return value**: a shell-escaped string to append to the fzf options
-    for fzf to run.
+* **return value**: a shell-escaped string to append to the fzf command
+  line arguments (`fzf_cli_args`) for fzf to run.
 
 ## Examples
 
@@ -337,7 +382,7 @@ local fzf_function = function (cb)
     -- wrapping to make all the file reading concurrent
     coroutine.wrap(function ()
       deal_with_tags(tagfile, cb)
-      total_done = total_done + 1 
+      total_done = total_done + 1
       if total_done == #runtimepaths then
         cb(nil)
       end
@@ -346,7 +391,7 @@ local fzf_function = function (cb)
 end
 
 coroutine.wrap(function ()
-  local result = fzf(fzf_function, "--nth 1 --ansi --expect=ctrl-t,ctrl-s,ctrl-v") 
+  local result = fzf(fzf_function, "--nth 1 --ansi --expect=ctrl-t,ctrl-s,ctrl-v")
   if not result then
     return
   end
@@ -378,3 +423,23 @@ have a Windows machine, so I cannot test it. It should be possible using
 the Luajit FFI and the
 [`CreateNamedPipeA`](https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-createnamedpipea)
 function from the win32 api.
+
+## FAQ
+
+* How do I change the color of the default floating window spawned by
+  `fzf.fzf`?
+
+  You need to set the `winhl` option for the default window. You can do
+  this for each command or globally by using the `window_on_create`
+  option.
+
+  This makes the background of the popup window the same color of the
+  backgrounds of normal windows. Example:
+
+  ```lua
+  require("fzf").default_window_options = {
+    window_on_create = function()
+      vim.cmd("set winhl=Normal:Normal")
+    end
+  }
+  ```
