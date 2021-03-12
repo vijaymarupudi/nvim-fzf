@@ -16,7 +16,7 @@ function M.raw_action(fn)
 end
 
 function M.action(fn)
-  local action_string, id = raw_action(fn)
+  local action_string, id = M.raw_action(fn)
   return escape(action_string), id
 end
 
