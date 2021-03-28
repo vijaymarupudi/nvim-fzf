@@ -42,7 +42,7 @@ end)()
 * [Action API](#action-api)
 * [Examples](#examples)
 * [How it works](#how-it-works)
-* [Todo](#todo)
+* [FAQ](#faq)
 
 ## Installation
 
