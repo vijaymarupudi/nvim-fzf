@@ -9,7 +9,7 @@ Does **not** conflict with [`fzf.vim`](https://github.com/junegunn/fzf.vim).
 Handcrafted useful commands using the library at
 [`nvim-fzf-commands`](https://github.com/vijaymarupudi/nvim-fzf-commands).
 
-![](gifs/example_2.gif)
+![](https://raw.githubusercontent.com/vijaymarupudi/nvim-fzf-commands/master/gifs/colorschemes.gif)
 
 ## Requirements
 
