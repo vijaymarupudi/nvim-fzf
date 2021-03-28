@@ -270,7 +270,8 @@ end)()
 
 * `fn(selections, fzf_lines, fzf_cols)`: A function that takes a
   selection, performs an action, and optionally returns either a `table`
-  or `string` to print to stdout.
+  or `string` to print to stdout. *This command is shell-escaped, so
+  that you can easily append it to the `--preview` fzf cli argument.*
 
   * `selections`: a `table` of strings selected in fzf
   * `fzf_lines`: number of lines in the preview window i.e.
@@ -280,6 +281,31 @@ end)()
 
 * **return value**: a shell-escaped string to append to the fzf command
   line arguments (`fzf_cli_args`) for fzf to run.
+
+
+`require("fzf.actions").raw_action(fn)`
+
+* Same as above, except it is not shell-escaped, so you can use it for
+  complicated `--bind` functions. Take care to escape the result of
+  this function before using it, as it contains spaces and quotes.
+
+  ```lua
+  local fzf = require("fzf").fzf
+  local raw_action = require("fzf.actions").raw_action
+
+  local raw_act_string = raw_action(function(args)
+    -- do something with the args
+  end)
+
+  local bind_string =
+  vim.fn.shellescape(string.format("--bind=ctrl-r:reload(%s)",
+  raw_act_string))
+
+  coroutine.wrap(function()
+    fzf({1, 2, 3, 4}, "--multi " .. bind_string)
+  end)()
+  ```
+
 
 ## Examples
 
