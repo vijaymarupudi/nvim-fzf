@@ -1,15 +1,18 @@
 # nvim-fzf
 
-A Lua API for using `fzf` in Neovim (>= 0.5).
+An asynchronous Lua API for using `fzf` in Neovim (>= 0.5). Allows for full asynchronicity for UI speed and usability.
 
-Allows for full asynchronicity for UI speed and usability.
+Preview:
 
-Does **not** conflict with [`fzf.vim`](https://github.com/junegunn/fzf.vim).
+![](https://raw.githubusercontent.com/vijaymarupudi/nvim-fzf-commands/master/gifs/colorschemes.gif)
+
+Note how in the example above, information is passed freely between
+neovim and fzf. Neovim is previewing the colorscheme selected *in fzf*.
+Using this library, you can perform anything in response to fzf events
+and keybindings.
 
 Handcrafted useful commands using the library at
 [`nvim-fzf-commands`](https://github.com/vijaymarupudi/nvim-fzf-commands).
-
-![](https://raw.githubusercontent.com/vijaymarupudi/nvim-fzf-commands/master/gifs/colorschemes.gif)
 
 ## Requirements
 
@@ -503,6 +506,11 @@ the Luajit FFI and the
 function from the win32 api.
 
 ## FAQ
+
+* Does this conflict with `fzf.vim`?
+
+  This library **does not conflict** with
+  [`fzf.vim`](https://github.com/junegunn/fzf.vim) or the fzf vim API.
 
 * How do I change the color of the default floating window spawned by
   `fzf.fzf`?
