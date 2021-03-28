@@ -306,7 +306,6 @@ end)()
   end)()
   ```
 
-
 ## Examples
 
 **Filetype picker**
@@ -333,7 +332,60 @@ coroutine.wrap(function()
 end)()
 ```
 
-**Helptags picker** (asynchronous, uses `--expect`)
+**Colorscheme picker**
+
+This example provides a live preview of the colorscheme while the user
+is choosing between them. An example showing the advantages of nvim-fzf
+and the `--preview` fzf cli arg.
+
+![](https://raw.githubusercontent.com/vijaymarupudi/nvim-fzf-commands/master/gifs/colorschemes.gif)
+
+```lua
+local action = require("fzf.actions").action
+
+local function get_colorschemes()
+  local colorscheme_vim_files = vim.fn.globpath(vim.o.rtp, "colors/*.vim", true, true)
+  local colorschemes = {}
+  for _, colorscheme_file in ipairs(colorscheme_vim_files) do
+    local colorscheme = vim.fn.fnamemodify(colorscheme_file, ":t:r")
+    table.insert(colorschemes, colorscheme)
+  end
+  return colorschemes
+end
+
+local function get_current_colorscheme()
+  if vim.g.colors_name then
+    return vim.g.colors_name
+  else
+    return 'default'
+  end
+end
+
+
+coroutine.wrap(function ()
+  local preview_function = action(function (args)
+    if args then
+      local colorscheme = args[1]
+      vim.cmd("colorscheme " .. colorscheme)
+    end
+  end)
+
+  local current_colorscheme = get_current_colorscheme()
+  local choices = fzf(get_colorschemes(), "--preview=" .. preview_function .. " --preview-window right:0") 
+  if not choices then
+    vim.cmd("colorscheme " .. current_colorscheme)
+  else
+    vim.cmd("colorscheme" .. choices[1])
+  end
+end)()
+
+```
+
+
+**Helptags picker**
+
+This is a bit complex example that is completely asynchronous for
+performance reasons. It also uses the fzf `--expect` command line flag.
 
 ![](gifs/example_4.gif)
 
