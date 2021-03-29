@@ -4,12 +4,12 @@ An asynchronous Lua API for using `fzf` in Neovim (>= 0.5). Allows for full asyn
 
 Preview:
 
-![](https://raw.githubusercontent.com/vijaymarupudi/nvim-fzf-commands/master/gifs/colorschemes.gif)
+![](https://raw.githubusercontent.com/vijaymarupudi/nvim-fzf-commands/master/gifs/bufferpicker2.gif)
 
 Note how in the example above, information is passed freely between
-neovim and fzf. Neovim is previewing the colorscheme selected *in fzf*.
-Using this library, you can perform anything in response to fzf events
-and keybindings.
+neovim and fzf. Neovim is previewing the buffer in a split that you have
+selected *in fzf*.  Using this library, you can perform anything in
+response to fzf events and keybindings.
 
 Handcrafted useful commands using the library at
 [`nvim-fzf-commands`](https://github.com/vijaymarupudi/nvim-fzf-commands).
