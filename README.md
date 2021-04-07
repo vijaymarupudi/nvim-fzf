@@ -43,6 +43,7 @@ end)()
 * [API Functions](#api-functions)
 * [Main API](#main-api)
 * [Action API](#action-api)
+* [Helpers](#helpers)
 * [Examples](#examples)
 * [How it works](#how-it-works)
 * [FAQ](#faq)
@@ -308,6 +309,37 @@ end)()
     fzf({1, 2, 3, 4}, "--multi " .. bind_string)
   end)()
   ```
+
+## Helpers
+
+Asynchronous programming is hard. For the case when you want to accept a
+shell command, and simply transform each line into another line,
+`nvim-fzf` has a helper function that returns a function that
+asynchronously applies the transformation, which can be passed right
+into fzf.
+
+`require("fzf.helpers").cmd_line_transformer(cmd, fn)`
+
+* cmd (string): a shell command
+* fn (function): a function that takes as input a line from the shell
+    command (string) and returns a new line to be sent to fzf (string).
+
+```lua
+local fzf = require("fzf")
+local fzf_helpers = require("fzf.helpers")
+
+coroutine.wrap(function()
+
+  -- the transformation function runs for each line in the command
+  local fzf_fn = fzf_helpers.cmd_line_transformer("seq 1000", function(x)
+    local n = tonumber(x)
+    return tostring(n * n)
+  end)
+
+  local choices = fzf.fzf(fzf_fn)
+
+end)()
+```
 
 ## Examples
 
