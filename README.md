@@ -95,6 +95,9 @@ Require this plugin using `local fzf = require('fzf')`
 
   * `window_options.width` (number): width of the window
   * `window_options.height` (number): height of the window
+  * `window_options.row` (number): row from top where window starts
+  * `window_options.col` (number): column from left where window starts
+  * `window_options.relative` ('win', 'editor', 'cursor'): window position relative to
   * `window_options.border` (boolean, default: true): whether to display
     a border
   * `window_options.window_on_create` (function): a function that's
@@ -122,6 +125,7 @@ Require this plugin using `local fzf = require('fzf')`
 
   An fzf function that opens a centered floating window relative to the
   current split and closes it after the user has chosen.
+  (Same as setting `window_options.relative = 'win'`)
 
   Example:
 
@@ -168,7 +172,7 @@ respected. You can override them using command line switches or
     local result = fzf("fd")
     ```
 
-  * if **table**: a list of strings or string convertables
+  * if **table**: a list of strings or string convertibles
 
     ```lua
     local result = fzf({1, 2, "item"})
