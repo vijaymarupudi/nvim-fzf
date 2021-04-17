@@ -147,13 +147,6 @@ end
 -- can be overwritten by the user
 FZF.default_window_options = {}
 
-local nvim_fzf_default_window_options = {
-  width = nil,
-  height = nil,
-  border = true,
-  window_on_create = function() end
-}
-
 local function merge_tables(tables)
   local ret = {}
   for _, t in ipairs(tables) do
@@ -177,7 +170,6 @@ local function process_options(fzf_cli_args, window_options)
   end
 
   local final_window_options = merge_tables {
-    nvim_fzf_default_window_options,
     FZF.default_window_options,
     window_options
   }
@@ -194,30 +186,24 @@ local function process_options(fzf_cli_args, window_options)
 end
 
 
-function FZF.fzf_relative(contents, fzf_cli_args, window_options)
-
-  local opts = process_options(fzf_cli_args, window_options)
-
-  local win = vim.api.nvim_get_current_win()
-  local buf = float.create_relative(opts.width, opts.height, opts.window_on_create)
-  local results = FZF.raw_fzf(contents, opts.fzf_cli_args)
-  vim.cmd("bw! " .. buf)
-  vim.api.nvim_set_current_win(win)
-  return results
-end
-
-
 function FZF.fzf(contents, fzf_cli_args, window_options)
 
   local opts = process_options(fzf_cli_args, window_options)
 
   local win = vim.api.nvim_get_current_win()
-  local buf = float.create_absolute(opts.width, opts.height, opts.window_on_create)
+  local buf = float.create(opts)
 
   local results = FZF.raw_fzf(contents, opts.fzf_cli_args)
   vim.cmd("bw! " .. buf)
   vim.api.nvim_set_current_win(win)
   return results
 end
+
+
+function FZF.fzf_relative(contents, fzf_cli_args, window_options)
+  window_options.relative = 'win'
+  return FZF.fzf(contents, fzf_cli_args, window_options)
+end
+
 
 return FZF

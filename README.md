@@ -76,7 +76,7 @@ end)()
 
 Require this plugin using `local fzf = require('fzf')`
 
-* `fzf.fzf(contents, fzf_cli_args, window_options)`
+* `fzf.fzf(contents, [fzf_cli_args], [window_options])`
 
   An fzf function that opens a centered floating window and closes it
   after the user has chosen.
@@ -91,10 +91,14 @@ Require this plugin using `local fzf = require('fzf')`
   ```
 
   `window_options`: an optional **table**, taking optional
-  settings
+  settings. You can use this to change the default floating window
+  behavior.
 
   * `window_options.width` (number): width of the window
   * `window_options.height` (number): height of the window
+  * `window_options.row` (number): row from top where window starts
+  * `window_options.col` (number): column from left where window starts
+  * `window_options.relative` ('win', 'editor', 'cursor'): window position relative to
   * `window_options.border` (boolean, default: true): whether to display
     a border
   * `window_options.window_on_create` (function): a function that's
@@ -118,10 +122,11 @@ Require this plugin using `local fzf = require('fzf')`
   end
   ```
 
-* `fzf.fzf_relative(contents, fzf_cli_args, window_options)`
+* `fzf.fzf_relative(contents, [fzf_cli_args], [window_options])`
 
   An fzf function that opens a centered floating window relative to the
   current split and closes it after the user has chosen.
+  (Same as setting `window_options.relative = 'win'`)
 
   Example:
 
@@ -135,7 +140,7 @@ Require this plugin using `local fzf = require('fzf')`
   `window_options`: an optional **table** taking optional
   settings. See `fzf.fzf` for information on settings.
 
-* `fzf.provided_win_fzf(contents, fzf_cli_args)`
+* `fzf.provided_win_fzf(contents, [fzf_cli_args])`
 
   Runs fzf in the current window, and closes it after the user has
   chosen. Allows for the user to provide the fzf window.
@@ -146,7 +151,7 @@ Require this plugin using `local fzf = require('fzf')`
   fzf.provided_win_fzf(contents, fzf_cli_args)
   ```
 
-* `fzf.raw_fzf(contents, fzf_cli_args)`
+* `fzf.raw_fzf(contents, [fzf_cli_args])`
 
   An fzf function that runs fzf in the current window. See `Main API`
   for more details about the general API.
@@ -158,7 +163,7 @@ respected. You can override them using command line switches or
 
 ## Main API
 
-`fzf(contents, fzf_cli_args)`
+`fzf(contents, [fzf_cli_args])`
 
 * `contents`
 
@@ -168,7 +173,7 @@ respected. You can override them using command line switches or
     local result = fzf("fd")
     ```
 
-  * if **table**: a list of strings or string convertables
+  * if **table**: a list of strings or string convertibles
 
     ```lua
     local result = fzf({1, 2, "item"})
