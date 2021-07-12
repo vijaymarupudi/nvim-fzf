@@ -195,7 +195,7 @@ respected. You can override them using command line switches or
     local result = fzf(function(cb)
       cb("value_1", function(err)
         -- this error can happen if the user has already chosen a value
-        -- before the information was send to fzf
+        -- before the information was sent to fzf
         if err then
           return
         end
