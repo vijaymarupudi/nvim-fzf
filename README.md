@@ -189,8 +189,8 @@ respected. You can override them using command line switches or
     ```lua
     local result = fzf(function(cb)
       cb("value_1", function(err)
-        -- this error can happen if the user can already chosen a value
-        -- using fzf
+        -- this error can happen if the user has already chosen a value
+        -- before the information was send to fzf
         if err then
           return
         end
@@ -199,7 +199,7 @@ respected. You can override them using command line switches or
             return
           end
           cb(nil) -- to close the pipe to fzf, this removes the loading
-                  -- indicated in fzf
+                  -- indicator in fzf
         end)
       end)
     end)
@@ -240,7 +240,7 @@ respected. You can override them using command line switches or
   end
   ```
 
-## Action API
+## Action API (fzf Previews, Bindings, Actions in Lua)
 
 Sometimes you want to use neovim information in fzf (such as previews of
 non file buffers, bindings to delete buffers, or change colorschemes).
@@ -322,7 +322,7 @@ into fzf.
 
 * cmd (string): a shell command
 * fn (function): a function that takes as input a line from the shell
-    command (string) and returns a new line to be sent to fzf (string).
+  command (string) and returns a new line to be sent to fzf (string).
 
 ```lua
 local fzf = require("fzf")
