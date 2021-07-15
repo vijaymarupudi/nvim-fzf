@@ -13,7 +13,8 @@ function M.create(opts)
     width = opts.width or math.min(columns - 4, math.max(80, columns - 20)),
     height = opts.height or math.min(lines - 4, math.max(20, lines - 10)),
     style = 'minimal',
-    relative = relative
+    relative = relative,
+    border = opts.border
   }
   win_opts.row = opts.row or math.floor(((lines - win_opts.height) / 2) - 1)
   win_opts.col = opts.col or math.floor((columns - win_opts.width) / 2)

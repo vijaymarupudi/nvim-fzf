@@ -174,9 +174,14 @@ local function process_options(fzf_cli_args, window_options)
     window_options
   }
 
-  -- parentheses are important here
-  if not (final_window_options.border == false) then
-    fzf_cli_args = "--border " .. fzf_cli_args
+  -- otherwise, the border option will be passed to
+  -- nvim_open_win
+  if final_window_options.border == false then
+    final_window_options.border = "none"
+  elseif final_window_options.border == true then
+    final_window_options.border = "rounded"
+  elseif final_window_options.border == nil then
+    final_window_options.border = "rounded"
   end
 
   final_window_options.fzf_cli_args = fzf_cli_args

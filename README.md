@@ -101,8 +101,11 @@ Require this plugin using `local fzf = require('fzf')`
   * `window_options.row` (number): row from top where window starts
   * `window_options.col` (number): column from left where window starts
   * `window_options.relative` ('win', 'editor', 'cursor'): window position relative to
-  * `window_options.border` (boolean, default: true): whether to display
-    a border
+  * `window_options.border` (boolean | string | table, default: true): whether to display a border
+    * if `border` is `false`, a border won't be shown
+    * if `border` is `true`, a rounded border will be shown
+    * if `border` is anything else, it is passed directly to
+      `nvim_open_win`
   * `window_options.window_on_create` (function): a function that's
     called after the window is created. Use this function to configure
     the various properties of the window such as background highlight
