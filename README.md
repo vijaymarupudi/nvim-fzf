@@ -11,8 +11,10 @@ neovim and fzf. Neovim is previewing the buffer in a split that you have
 selected *in fzf*.  Using this library, you can perform anything in
 response to fzf events and keybindings.
 
-Handcrafted useful commands using the library at
-[`nvim-fzf-commands`](https://github.com/vijaymarupudi/nvim-fzf-commands).
+Some handcrafted useful commands at
+
+* [`fzf-lua`](https://github.com/ibhagwan/fzf-lua)
+* [`nvim-fzf-commands`](https://github.com/vijaymarupudi/nvim-fzf-commands).
 
 ## Requirements
 
