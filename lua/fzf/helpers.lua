@@ -26,12 +26,18 @@ local function cmd_line_transformer(cmd, fn)
   end
 
   return function (fzf_cb)
-      local stdout = uv.new_pipe()
+      local stdout = uv.new_pipe(false)
 
       uv.spawn("sh", {
           args = {'-c', cmd},
           stdio = {nil, stdout, nil}
-      })
+      },
+      -- need to specify on_exit, see:
+      -- https://github.com/luvit/luv/blob/master/docs.md#uvspawnfile-options-onexit
+      function()
+        stdout:read_stop()
+        stdout:close()
+      end)
 
       local n_writing = 0
       local done = false
