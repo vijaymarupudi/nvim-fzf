@@ -39,7 +39,7 @@ function FZF.raw_fzf(contents, fzf_cli_args)
   if not coroutine.running() then
     error("Please run function in a coroutine")
   end
-  local command = "fzf"
+  local command = FZF.fzf_binary or "fzf"
   local fifotmpname = vim.fn.tempname()
   local outputtmpname = vim.fn.tempname()
 
