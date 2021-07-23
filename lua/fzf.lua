@@ -44,7 +44,7 @@ function FZF.raw_fzf(contents, fzf_cli_args)
   local outputtmpname = vim.fn.tempname()
 
   if contents then
-    if type(contents) == "string" then
+    if type(contents) == "string" and #contents>0 then
       command = string.format("%s | %s", contents, command)
     else
       command = command .. " < " .. vim.fn.shellescape(fifotmpname)
@@ -62,7 +62,7 @@ function FZF.raw_fzf(contents, fzf_cli_args)
   local done_state = false
 
   local function on_done()
-    if type(contents) == "string" then
+    if not contents or type(contents) == "string" then
       return
     end
     if done_state then return end
@@ -90,7 +90,7 @@ function FZF.raw_fzf(contents, fzf_cli_args)
   vim.cmd[[startinsert]]
 
 
-  if type(contents) == "string" then
+  if not contents or type(contents) == "string" then
     goto wait_for_fzf
   end
 
