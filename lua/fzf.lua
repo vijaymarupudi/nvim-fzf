@@ -203,7 +203,7 @@ function FZF.fzf(contents, user_opts, window_options)
   local buf = float.create(opts.window_options)
 
   local results = FZF.raw_fzf(contents, opts)
-  vim.cmd("bw! " .. buf)
+  vim.api.nvim_buf_delete(buf, {force=true})
   vim.api.nvim_set_current_win(win)
   return results
 end
