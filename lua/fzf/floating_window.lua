@@ -20,13 +20,13 @@ function M.create(opts)
   win_opts.col = opts.col or math.floor((columns - win_opts.width) / 2)
 
   local bufnr = vim.api.nvim_create_buf(false, true)
-  vim.api.nvim_open_win(bufnr, true, win_opts)
+  local winid = vim.api.nvim_open_win(bufnr, true, win_opts)
 
   if opts.window_on_create then
     opts.window_on_create()
   end
 
-  return bufnr
+  return bufnr, winid
 end
 
 return M
