@@ -32,14 +32,65 @@ local function get_lines_from_file(file)
   return t
 end
 
+-- can be overwritten by the user
+FZF.default_window_options = {}
+FZF.default_options = {
+  fzf_binary      = "fzf",
+  fzf_cli_args    = "",
+}
+
+-- for convenience window functions
+-- currently adds a border by default
+local function process_options(user_opts, window_options)
+
+  -- backward compatibility:
+  -- 'user_opts' used to be 'fzf_cli_args'
+  if type(user_opts) == "string" then
+    local fzf_cli_args = user_opts
+    user_opts = { fzf_cli_args = fzf_cli_args }
+  end
+
+  if not user_opts then user_opts = {} end
+  if not user_opts.window_options then user_opts.window_options = {} end
+
+  -- backward compatibility:
+  -- if the user supplied 'default_window_options'
+  user_opts.window_options = vim.tbl_deep_extend("force",
+      FZF.default_window_options, user_opts.window_options)
+
+  -- backward compatibility: 'window_options'
+  if window_options then
+    user_opts.window_options = vim.tbl_deep_extend("force",
+        user_opts.window_options, window_options)
+  end
+
+  -- otherwise, the border option will be passed to
+  -- nvim_open_win
+  if user_opts.window_options.border == false then
+    user_opts.window_options.border = "none"
+  elseif user_opts.window_options.border == true then
+    user_opts.window_options.border = "rounded"
+  elseif user_opts.window_options.border == nil then
+    user_opts.window_options.border = "rounded"
+  end
+
+  -- merge the fzf binary and args
+  user_opts = vim.tbl_deep_extend("force", FZF.default_options, user_opts)
+
+  return user_opts
+end
+
 -- contents can be either a table with tostring()able items, or a function that
 -- can be called repeatedly for values. The latter can use coroutines for async
 -- behavior.
-function FZF.raw_fzf(contents, fzf_cli_args)
+function FZF.raw_fzf(contents, user_opts)
   if not coroutine.running() then
     error("Please run function in a coroutine")
   end
-  local command = FZF.fzf_binary or "fzf"
+  -- overwrite defaults if user supplied own options
+  local opts = process_options(user_opts, nil)
+  local command = opts.fzf_binary
+  local fzf_cli_args = opts.fzf_cli_args
   local fifotmpname = vim.fn.tempname()
   local outputtmpname = vim.fn.tempname()
 
@@ -111,17 +162,17 @@ function FZF.raw_fzf(contents, fzf_cli_args)
           if done_state then return end
           if usrval == nil then
             on_done()
-            cb(nil)
+            if cb then cb(nil) end
             return
           end
           uv.fs_write(fd, tostring(usrval) .. "\n", -1, function (err, bytes)
             if err then
-              cb(err)
+              if cb then cb(err) end
               on_done()
               return
             end
 
-            cb(nil)
+            if cb then cb(nil) end
 
           end)
         end, fd)
@@ -134,9 +185,9 @@ function FZF.raw_fzf(contents, fzf_cli_args)
   return coroutine.yield()
 end
 
-function FZF.provided_win_fzf(contents, fzf_cli_args)
+function FZF.provided_win_fzf(contents, user_opts)
   local win = vim.api.nvim_get_current_win()
-  local output = FZF.raw_fzf(contents, fzf_cli_args)
+  local output = FZF.raw_fzf(contents, user_opts)
   local buf = vim.api.nvim_get_current_buf()
   vim.api.nvim_win_close(win, true)
   vim.api.nvim_buf_delete(buf, { force = true })
@@ -144,70 +195,23 @@ function FZF.provided_win_fzf(contents, fzf_cli_args)
 end
 
 
--- can be overwritten by the user
-FZF.default_window_options = {}
+function FZF.fzf(contents, user_opts, window_options)
 
-local function merge_tables(tables)
-  local ret = {}
-  for _, t in ipairs(tables) do
-    for key, value in pairs(t) do
-      ret[key] = value
-    end
-  end
-  return ret
-end
-
--- for convenience window functions
--- currently adds a border by default
-local function process_options(fzf_cli_args, window_options)
-
-  if not window_options then
-    window_options = {}
-  end
-
-  if not fzf_cli_args then
-    fzf_cli_args = ""
-  end
-
-  local final_window_options = merge_tables {
-    FZF.default_window_options,
-    window_options
-  }
-
-  -- otherwise, the border option will be passed to
-  -- nvim_open_win
-  if final_window_options.border == false then
-    final_window_options.border = "none"
-  elseif final_window_options.border == true then
-    final_window_options.border = "rounded"
-  elseif final_window_options.border == nil then
-    final_window_options.border = "rounded"
-  end
-
-  final_window_options.fzf_cli_args = fzf_cli_args
-
-  return final_window_options
-
-end
-
-
-function FZF.fzf(contents, fzf_cli_args, window_options)
-
-  local opts = process_options(fzf_cli_args, window_options)
+  local opts = process_options(user_opts, window_options)
 
   local win = vim.api.nvim_get_current_win()
-  local buf = float.create(opts)
+  local buf = float.create(opts.window_options)
 
-  local results = FZF.raw_fzf(contents, opts.fzf_cli_args)
+  local results = FZF.raw_fzf(contents, opts)
   vim.cmd("bw! " .. buf)
   vim.api.nvim_set_current_win(win)
   return results
 end
 
 
-function FZF.fzf_relative(contents, fzf_cli_args, window_options)
+function FZF.fzf_relative(contents, user_opts, window_options)
   window_options.relative = 'win'
-  return FZF.fzf(contents, fzf_cli_args, window_options)
+  return FZF.fzf(contents, user_opts, window_options)
 end
 
 
