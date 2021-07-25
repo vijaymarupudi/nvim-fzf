@@ -203,12 +203,15 @@ function FZF.fzf(contents, user_opts, window_options)
   local bufnr, winid = float.create(opts.window_options)
 
   local results = FZF.raw_fzf(contents, opts)
-  vim.api.nvim_buf_delete(bufnr, {force=true})
   if vim.api.nvim_win_is_valid(winid) then
-    vim.api.nvim_set_current_win(winid)
     vim.api.nvim_win_close(winid, {force=true})
   end
-  vim.api.nvim_set_current_win(win)
+  if vim.api.nvim_buf_is_valid(bufnr) then
+    vim.api.nvim_buf_delete(bufnr, {force=true})
+  end
+  if vim.api.nvim_win_is_valid(win) then
+    vim.api.nvim_set_current_win(win)
+  end
   return results
 end
 
