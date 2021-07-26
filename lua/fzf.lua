@@ -32,24 +32,31 @@ local function get_lines_from_file(file)
   return t
 end
 
--- can be overwritten by the user
-FZF.default_options = {
+local DEFAULTS = {
   fzf_binary      = "fzf",
   fzf_cli_args    = "",
 }
 
+-- can be overwritten by the user
+-- We cannot put the default options (above) in this object because we allow
+-- users to assign a new object to this parameter.
+FZF.default_options = {}
+
 -- backwards compatibility: this was once provided as the global option object.
 -- Now the options have moved beyond just windows (such as providing a binary
--- to call), so we're renaming the object. They are still the same object, so
--- backwards compatibility will be fine.
-FZF.default_window_options = FZF.default_options
+-- to call), so we're renaming it. This cannot be the same object as FZF.default_options because we allow users to assign a new object to this parameter.
+FZF.default_window_options = {}
 
 -- for convenience window functions
 local function process_options(user_fzf_cli_args, user_options)
 
+  if not user_fzf_cli_args then user_fzf_cli_args = "" end
   if not user_options then user_options = {} end
 
-  local opts = vim.tbl_deep_extend("force", fzf.default_options, user_options)
+  local opts = vim.tbl_deep_extend("force", DEFAULTS,
+    FZF.default_window_options,
+    FZF.default_options,
+    user_options)
 
   -- otherwise, the border option will be passed to
   -- nvim_open_win
@@ -186,7 +193,7 @@ function FZF.fzf(contents, fzf_cli_args, options)
   local opts = process_options(fzf_cli_args, options)
 
   local win = vim.api.nvim_get_current_win()
-  local bufnr, winid = float.create(opts.options)
+  local bufnr, winid = float.create(opts)
 
   local results = FZF.raw_fzf(contents, fzf_cli_args, options)
   if vim.api.nvim_win_is_valid(winid) then
