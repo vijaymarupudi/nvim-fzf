@@ -33,62 +33,48 @@ local function get_lines_from_file(file)
 end
 
 -- can be overwritten by the user
-FZF.default_window_options = {}
 FZF.default_options = {
   fzf_binary      = "fzf",
   fzf_cli_args    = "",
 }
 
+-- backwards compatibility: this was once provided as the global option object.
+-- Now the options have moved beyond just windows (such as providing a binary
+-- to call), so we're renaming the object. They are still the same object, so
+-- backwards compatibility will be fine.
+FZF.default_window_options = FZF.default_options
+
 -- for convenience window functions
--- currently adds a border by default
-local function process_options(user_opts, window_options)
+local function process_options(user_fzf_cli_args, user_options)
 
-  -- backward compatibility:
-  -- 'user_opts' used to be 'fzf_cli_args'
-  if type(user_opts) == "string" then
-    local fzf_cli_args = user_opts
-    user_opts = { fzf_cli_args = fzf_cli_args }
-  end
+  if not user_options then user_options = {} end
 
-  if not user_opts then user_opts = {} end
-  if not user_opts.window_options then user_opts.window_options = {} end
-
-  -- backward compatibility:
-  -- if the user supplied 'default_window_options'
-  user_opts.window_options = vim.tbl_deep_extend("force",
-      FZF.default_window_options, user_opts.window_options)
-
-  -- backward compatibility: 'window_options'
-  if window_options then
-    user_opts.window_options = vim.tbl_deep_extend("force",
-        user_opts.window_options, window_options)
-  end
+  local opts = vim.tbl_deep_extend("force", fzf.default_options, user_options)
 
   -- otherwise, the border option will be passed to
   -- nvim_open_win
-  if user_opts.window_options.border == false then
-    user_opts.window_options.border = "none"
-  elseif user_opts.window_options.border == true then
-    user_opts.window_options.border = "rounded"
-  elseif user_opts.window_options.border == nil then
-    user_opts.window_options.border = "rounded"
+  if opts.border == false then
+    opts.border = "none"
+  elseif opts.border == true then
+    opts.border = "rounded"
+  elseif opts.border == nil then
+    opts.border = "rounded"
   end
 
-  -- merge the fzf binary and args
-  user_opts = vim.tbl_deep_extend("force", FZF.default_options, user_opts)
+  opts.fzf_cli_args = opts.fzf_cli_args .. user_fzf_cli_args
 
-  return user_opts
+  return opts
 end
 
 -- contents can be either a table with tostring()able items, or a function that
 -- can be called repeatedly for values. The latter can use coroutines for async
 -- behavior.
-function FZF.raw_fzf(contents, user_opts)
+function FZF.raw_fzf(contents, fzf_cli_args, user_options)
   if not coroutine.running() then
     error("Please run function in a coroutine")
   end
   -- overwrite defaults if user supplied own options
-  local opts = process_options(user_opts, nil)
+  local opts = process_options(fzf_cli_args, user_options)
   local command = opts.fzf_binary
   local fzf_cli_args = opts.fzf_cli_args
   local fifotmpname = vim.fn.tempname()
@@ -185,9 +171,9 @@ function FZF.raw_fzf(contents, user_opts)
   return coroutine.yield()
 end
 
-function FZF.provided_win_fzf(contents, user_opts)
+function FZF.provided_win_fzf(contents, fzf_cli_args, options)
   local win = vim.api.nvim_get_current_win()
-  local output = FZF.raw_fzf(contents, user_opts)
+  local output = FZF.raw_fzf(contents, fzf_cli_args, options)
   local buf = vim.api.nvim_get_current_buf()
   vim.api.nvim_win_close(win, true)
   vim.api.nvim_buf_delete(buf, { force = true })
@@ -195,14 +181,14 @@ function FZF.provided_win_fzf(contents, user_opts)
 end
 
 
-function FZF.fzf(contents, user_opts, window_options)
+function FZF.fzf(contents, fzf_cli_args, options)
 
-  local opts = process_options(user_opts, window_options)
+  local opts = process_options(fzf_cli_args, options)
 
   local win = vim.api.nvim_get_current_win()
-  local bufnr, winid = float.create(opts.window_options)
+  local bufnr, winid = float.create(opts.options)
 
-  local results = FZF.raw_fzf(contents, opts)
+  local results = FZF.raw_fzf(contents, fzf_cli_args, options)
   if vim.api.nvim_win_is_valid(winid) then
     vim.api.nvim_win_close(winid, {force=true})
   end
@@ -216,10 +202,9 @@ function FZF.fzf(contents, user_opts, window_options)
 end
 
 
-function FZF.fzf_relative(contents, user_opts, window_options)
-  window_options.relative = 'win'
-  return FZF.fzf(contents, user_opts, window_options)
+function FZF.fzf_relative(contents, fzf_cli_args, options)
+  options.relative = 'win'
+  return FZF.fzf(contents, fzf_cli_args, options)
 end
-
 
 return FZF
