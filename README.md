@@ -7,9 +7,9 @@ Preview:
 ![](https://raw.githubusercontent.com/vijaymarupudi/nvim-fzf-commands/master/gifs/bufferpicker2.gif)
 
 Note how in the example above, information is passed freely between
-neovim and fzf. Neovim is previewing the buffer in a split that you have
-selected *in fzf*.  Using this library, you can perform anything in
-response to fzf events and keybindings.
+neovim and `fzf`. Neovim is previewing the buffer in a split that you have
+selected *in `fzf`*.  Using this library, you can perform anything in
+response to `fzf` events and keybindings.
 
 Some handcrafted useful commands at
 
@@ -78,7 +78,7 @@ end)()
 
 Require this plugin using `local fzf = require('fzf')`
 
-* `fzf.fzf(contents, [fzf_cli_args], [window_options])`
+* `fzf.fzf(contents, [fzf_cli_args], [options])`
 
   An fzf function that opens a centered floating window and closes it
   after the user has chosen.
@@ -92,29 +92,35 @@ Require this plugin using `local fzf = require('fzf')`
   end
   ```
 
-  `window_options`: an optional **table**, taking optional
+  `options`: an optional **table**, taking optional
   settings. You can use this to change the default floating window
-  behavior.
+  behavior or the fzf binary.
 
-  * `window_options.width` (number): width of the window
-  * `window_options.height` (number): height of the window
-  * `window_options.row` (number): row from top where window starts
-  * `window_options.col` (number): column from left where window starts
-  * `window_options.relative` ('win', 'editor', 'cursor'): window position relative to
-  * `window_options.border` (boolean | string | table, default: true): whether to display a border
+  * `options.width` (number): width of the window
+  * `options.height` (number): height of the window
+  * `options.row` (number): row from top where window starts
+  * `options.col` (number): column from left where window starts
+  * `options.relative` ('win', 'editor', 'cursor'): window position relative to
+  * `options.border` (boolean | string | table, default: true): whether to display a border
     * if `border` is `false`, a border won't be shown
     * if `border` is `true`, a rounded border will be shown
     * if `border` is anything else, it is passed directly to
       `nvim_open_win`
-  * `window_options.window_on_create` (function): a function that's
+  * `options.window_on_create` (function): a function that's
     called after the window is created. Use this function to configure
     the various properties of the window such as background highlight
     group.
+  * `options.fzf_binary` (string): The name (or path) of the `fzf` (or
+    `skim`) executable.
+  * `options.fzf_cli_args` (string): Additional fzf command line
+    arguments to prepend to the arguments supplied to the fzf functions.
+    This is only useful when used in conjunction with
+    `fzf.default_options`.
 
-  **NOTE**: `window_options` inherits its properties from
-  `fzf.default_window_options`. If you'd like to change the defaults for
+  **NOTE**: `options` inherits its properties from
+  `fzf.default_options`. If you'd like to change the defaults for
   all nvim-fzf functions, modify this table e.g.
-  `require("fzf").default_window_options = { border = false }`
+  `require("fzf").default_options = { border = false }`
 
   Example:
 
@@ -127,11 +133,11 @@ Require this plugin using `local fzf = require('fzf')`
   end
   ```
 
-* `fzf.fzf_relative(contents, [fzf_cli_args], [window_options])`
+* `fzf.fzf_relative(contents, [fzf_cli_args], [options])`
 
   An fzf function that opens a centered floating window relative to the
   current split and closes it after the user has chosen.
-  (Same as setting `window_options.relative = 'win'`)
+  (Same as setting `options.relative = 'win'`)
 
   Example:
 
@@ -142,7 +148,7 @@ Require this plugin using `local fzf = require('fzf')`
   end
   ```
 
-  `window_options`: an optional **table** taking optional
+  `options`: an optional **table** taking optional
   settings. See `fzf.fzf` for information on settings.
 
 * `fzf.provided_win_fzf(contents, [fzf_cli_args])`
@@ -287,14 +293,14 @@ end)()
   or `string` to print to stdout. *This command is shell-escaped, so
   that you can easily append it to the `--preview` fzf cli argument.*
 
-  * `selections`: a `table` of strings selected in fzf
+  * `selections`: a `table` of strings selected in `fzf`
   * `fzf_lines`: number of lines in the preview window i.e.
     `$FZF_PREVIEW_LINES`
   * `fzf_cols`: number of cols in the preview window i.e.
     `$FZF_PREVIEW_COLS`
 
-* **return value**: a shell-escaped string to append to the fzf command
-  line arguments (`fzf_cli_args`) for fzf to run.
+* **return value**: a shell-escaped string to append to the `fzf` command
+  line arguments (`fzf_cli_args`) for `fzf` to run.
 
 
 `require("fzf.actions").raw_action(fn)`
@@ -326,13 +332,13 @@ Asynchronous programming is hard. For the case when you want to accept a
 shell command, and simply transform each line into another line,
 `nvim-fzf` has a helper function that returns a function that
 asynchronously applies the transformation, which can be passed right
-into fzf.
+into `fzf`.
 
 `require("fzf.helpers").cmd_line_transformer(cmd, fn)`
 
 * cmd (string): a shell command
 * fn (function): a function that takes as input a line from the shell
-  command (string) and returns a new line to be sent to fzf (string).
+  command (string) and returns a new line to be sent to `fzf` (string).
 
 ```lua
 local fzf = require("fzf")
@@ -430,7 +436,7 @@ end)()
 **Helptags picker**
 
 This is a bit complex example that is completely asynchronous for
-performance reasons. It also uses the fzf `--expect` command line flag.
+performance reasons. It also uses the `fzf` `--expect` command line flag.
 
 ![](gifs/example_4.gif)
 
@@ -539,7 +545,7 @@ end)()
 ## How it works
 
 This plugin uses the `mkfifo` posix program to get a temporary named
-pipe, and uses it to communicate to fzf.
+pipe, and uses it to communicate to `fzf`.
 
 Contributions welcome to make this compatible with Windows. I do not
 have a Windows machine, so I cannot test it. It should be possible using
@@ -565,7 +571,7 @@ function from the win32 api.
   backgrounds of normal windows. Example:
 
   ```lua
-  require("fzf").default_window_options = {
+  require("fzf").default_options = {
     window_on_create = function()
       vim.cmd("set winhl=Normal:Normal")
     end
