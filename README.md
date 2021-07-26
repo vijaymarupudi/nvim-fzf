@@ -151,7 +151,7 @@ Require this plugin using `local fzf = require('fzf')`
   `options`: an optional **table** taking optional
   settings. See `fzf.fzf` for information on settings.
 
-* `fzf.provided_win_fzf(contents, [fzf_cli_args])`
+* `fzf.provided_win_fzf(contents, [fzf_cli_args], [options])`
 
   Runs fzf in the current window, and closes it after the user has
   chosen. Allows for the user to provide the fzf window.
@@ -162,7 +162,7 @@ Require this plugin using `local fzf = require('fzf')`
   fzf.provided_win_fzf(contents, fzf_cli_args)
   ```
 
-* `fzf.raw_fzf(contents, [fzf_cli_args])`
+* `fzf.raw_fzf(contents, [fzf_cli_args], [options])`
 
   An fzf function that runs fzf in the current window. See `Main API`
   for more details about the general API.
