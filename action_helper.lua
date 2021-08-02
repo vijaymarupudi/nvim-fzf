@@ -12,6 +12,7 @@ local success, errmsg = pcall(function ()
   end
   local environ = vim.fn.environ()
   local chan_id = vim.fn.sockconnect("pipe", environ.NVIM_LISTEN_ADDRESS, { rpc = true })
+  -- for skim compatibility
   local preview_lines = environ.FZF_PREVIEW_LINES or environ.LINES
   local preview_cols = environ.FZF_PREVIEW_COLUMNS or environ.COLUMNS
   local usrresult = vim.rpcrequest(chan_id, "nvim_exec_lua", [[
