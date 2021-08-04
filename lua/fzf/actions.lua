@@ -8,10 +8,11 @@ end
 
 function M.raw_action(fn)
   local nvim_fzf_directory = vim.g.nvim_fzf_directory
-  local shell_script_path = string.format("%s/action_helper.sh", nvim_fzf_directory)
   local id = registry.register_func(fn)
-  local action_string = string.format("%s %s %s {+}",
-    escape(shell_script_path), escape(nvim_fzf_directory), id)
+  local action_string = string.format("nvim --headless --clean --cmd %s %s %s {+}",
+    vim.fn.shellescape("luafile " .. nvim_fzf_directory .. "/action_helper.lua"),
+    vim.fn.shellescape(nvim_fzf_directory),
+    id)
   return action_string, id
 end
 
