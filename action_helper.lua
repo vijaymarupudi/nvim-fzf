@@ -1,5 +1,5 @@
 print = function(...)
-  io.stdout:write(table.concat({...}, "\t") .. "\n") 
+  io.stdout:write(table.concat({...}, "\t") .. "\n")
 end
 local function_id = tonumber(vim.fn.argv(1))
 local success, errmsg = pcall(function ()
@@ -12,6 +12,9 @@ local success, errmsg = pcall(function ()
   end
   local environ = vim.fn.environ()
   local chan_id = vim.fn.sockconnect("pipe", environ.NVIM_LISTEN_ADDRESS, { rpc = true })
+  -- for skim compatibility
+  local preview_lines = environ.FZF_PREVIEW_LINES or environ.LINES
+  local preview_cols = environ.FZF_PREVIEW_COLUMNS or environ.COLUMNS
   local usrresult = vim.rpcrequest(chan_id, "nvim_exec_lua", [[
     local luaargs = {...}
     local function_id = luaargs[1]
@@ -20,7 +23,7 @@ local success, errmsg = pcall(function ()
     local fzf_columns = luaargs[4]
     local usr_func = require"fzf.registry".get_func(function_id)
     return usr_func(fzf_selection, fzf_lines, fzf_columns)
-  ]], {function_id, args, tonumber(environ.FZF_PREVIEW_LINES), tonumber(environ.FZF_PREVIEW_COLUMNS)})
+  ]], {function_id, args, tonumber(preview_lines), tonumber(preview_cols)})
 
   if type(usrresult) == "string" then
     print(usrresult)
