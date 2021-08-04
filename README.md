@@ -326,6 +326,25 @@ end)()
   end)()
   ```
 
+`require("fzf.actions").async_action(fn)`
+
+
+* `fn(pipe, selections, fzf_lines, fzf_cols)`: Similar to `action(...)`,
+  but `fn` is passed an additional argument, the `libuv` / `vim.loop`
+  pipe to `fzf`, as the first argument. Users can write to this pipe
+  using `uv.write(pipe, data, callback)` and are expected to close the
+  pipe using `uv.close(pipe)`.
+
+  This function can be used for previews that take a long time to render
+  and calculate from neovim.
+
+`require("fzf.actions").raw_async_action(fn)`
+
+* Same as above, except it is not shell-escaped, so you can use it for
+  complicated `--bind` functions. Take care to escape the result of
+  this function before using it, as it contains spaces and quotes.
+
+
 ## Helpers
 
 Asynchronous programming is hard. For the case when you want to accept a
@@ -356,6 +375,26 @@ coroutine.wrap(function()
 
 end)()
 ```
+
+`require("fzf.helpers").choices_to_shell_cmd_previewer(fn)`
+
+* `fn(items, fzf_lines, fzf_cols)`: A function that is expected to
+  return a shell cmd string to run asynchronously and feed to `fzf`.
+  This allows the user to use Lua to parse the input from fzf before
+  performantly using an external process to preview the output.
+
+  ```lua
+  local fzf = require("fzf")
+  local helpers = require("fzf.helpers")
+
+
+  coroutine.wrap(function ()
+    local action = helpers.choices_to_shell_cmd_previewer(function(items)
+      return "seq " .. vim.fn.shellescape(tostring(items[1])) 
+    end)
+    fzf.fzf("seq 1 1000", "--preview=" .. action)
+  end)()
+  ```
 
 ## Examples
 
