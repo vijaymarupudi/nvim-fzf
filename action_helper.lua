@@ -1,6 +1,37 @@
-print = function(...)
-  io.stdout:write(table.concat({...}, "\t") .. "\n")
+local uv = vim.loop
+
+local function print(x)
+  io.write(tostring(x) .. "\n")
 end
+
+local function get_preview_socket()
+  local tmp = vim.fn.tempname() 
+  local socket = uv.new_pipe()
+  uv.pipe_bind(socket, tmp)
+  return socket, tmp
+end
+
+local preview_socket, preview_socket_path = get_preview_socket()
+
+uv.listen(preview_socket, 100, function(err)
+  local preview_receive_socket = uv.new_pipe()
+  -- start listening
+  uv.accept(preview_socket, preview_receive_socket)
+  preview_receive_socket:read_start(function(err, data)
+    assert(not err)
+    if not data then
+      uv.close(preview_receive_socket)
+      uv.close(preview_socket)
+      vim.schedule(function()
+        vim.cmd[[qall]]
+      end)
+      return
+    end
+    io.write(data)
+  end)
+end)
+
+
 local function_id = tonumber(vim.fn.argv(1))
 local success, errmsg = pcall(function ()
   -- this is guaranteed to be 2 or more, we are interested in those greater than 2
@@ -15,29 +46,26 @@ local success, errmsg = pcall(function ()
   -- for skim compatibility
   local preview_lines = environ.FZF_PREVIEW_LINES or environ.LINES
   local preview_cols = environ.FZF_PREVIEW_COLUMNS or environ.COLUMNS
-  local usrresult = vim.rpcrequest(chan_id, "nvim_exec_lua", [[
+  vim.rpcrequest(chan_id, "nvim_exec_lua", [[
     local luaargs = {...}
     local function_id = luaargs[1]
-    local fzf_selection = luaargs[2]
-    local fzf_lines = luaargs[3]
-    local fzf_columns = luaargs[4]
+    local preview_socket_path = luaargs[2]
+    local fzf_selection = luaargs[3]
+    local fzf_lines = luaargs[4]
+    local fzf_columns = luaargs[5]
     local usr_func = require"fzf.registry".get_func(function_id)
-    return usr_func(fzf_selection, fzf_lines, fzf_columns)
-  ]], {function_id, args, tonumber(preview_lines), tonumber(preview_cols)})
-
-  if type(usrresult) == "string" then
-    print(usrresult)
-  elseif type(usrresult) == "table" then
-    print(table.concat(usrresult, "\n"))
-  elseif usrresult == vim.NIL then
-    -- do nothing
-  else
-    error("Invalid user function return type")
-  end
+    return usr_func(preview_socket_path, fzf_selection, fzf_lines, fzf_columns)
+  ]], {
+    function_id,
+    preview_socket_path,
+    args,
+    tonumber(preview_lines),
+    tonumber(preview_cols)
+  })
   vim.fn.chanclose(chan_id)
 end)
-if not success then
-  print("ERROR: " .. errmsg)
-end
 
-vim.cmd [[qall]]
+if not success then
+  io.write("NVIM-FZF LUA ERROR\n\n" .. errmsg .. "\n")
+  vim.cmd [[qall]]
+end
