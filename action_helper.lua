@@ -6,7 +6,7 @@ end
 
 local function get_preview_socket()
   local tmp = vim.fn.tempname() 
-  local socket = uv.new_pipe()
+  local socket = uv.new_pipe(false)
   uv.pipe_bind(socket, tmp)
   return socket, tmp
 end
@@ -14,7 +14,7 @@ end
 local preview_socket, preview_socket_path = get_preview_socket()
 
 uv.listen(preview_socket, 100, function(err)
-  local preview_receive_socket = uv.new_pipe()
+  local preview_receive_socket = uv.new_pipe(false)
   -- start listening
   uv.accept(preview_socket, preview_receive_socket)
   preview_receive_socket:read_start(function(err, data)

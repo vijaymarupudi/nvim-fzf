@@ -10,7 +10,7 @@ function M.raw_async_action(fn)
   local nvim_fzf_directory = vim.g.nvim_fzf_directory
 
   local receiving_function = function(pipe_path, ...)
-    local pipe = uv.new_pipe()
+    local pipe = uv.new_pipe(false)
     local args = {...}
     uv.pipe_connect(pipe, pipe_path, function(err)
       vim.schedule(function ()
