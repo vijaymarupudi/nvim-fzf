@@ -98,8 +98,8 @@ local function choices_to_shell_cmd_previewer(fn)
   local action = fzf_async_action(function(pipe, ...)
 
     local shell_cmd = fn(...)
-    local output_pipe = uv.new_pipe()
-    local error_pipe = uv.new_pipe()
+    local output_pipe = uv.new_pipe(false)
+    local error_pipe = uv.new_pipe(false)
 
     local shell = vim.env.SHELL or "sh"
     
