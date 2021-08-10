@@ -82,9 +82,13 @@ local function cmd_line_transformer(cmd, fn)
             fzf_cb(process_lines(stripped_without_newline, fn), on_write_callback)
         else
             local nl_index = find_last_newline(data)
-            prev_line_content = string.sub(data, nl_index + 1)
-            local stripped_without_newline = string.sub(data, 1, nl_index - 1)
-            fzf_cb(process_lines(stripped_without_newline, fn), on_write_callback)
+            if not nl_index then
+                prev_line_content = data
+            else
+                prev_line_content = string.sub(data, nl_index + 1)
+                local stripped_without_newline = string.sub(data, 1, nl_index - 1)
+                fzf_cb(process_lines(stripped_without_newline, fn), on_write_callback)
+            end
         end
       end
 
