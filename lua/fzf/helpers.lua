@@ -29,10 +29,18 @@ local function cmd_line_transformer(cmd, fn)
   return function (fzf_cb)
       local stdout = uv.new_pipe(false)
 
-      uv.spawn("sh", {
-          args = {'-c', cmd},
+      local opts = {
           stdio = {nil, stdout, nil}
-      },
+      }
+
+      if type(cmd) == 'string' then
+          opts.args = {'-c', cmd}
+      else
+          opts.args = {'-c', cmd.cmd}
+          opts.cwd = cmd.cwd
+      end
+
+      uv.spawn("sh", opts,
       -- need to specify on_exit, see:
       -- https://github.com/luvit/luv/blob/master/docs.md#uvspawnfile-options-onexit
       function()
@@ -106,13 +114,19 @@ local function choices_to_shell_cmd_previewer(fn)
     local error_pipe = uv.new_pipe(false)
 
     local shell = vim.env.SHELL or "sh"
-    
-    uv.spawn(shell, {
-      args = { "-c", shell_cmd },
-      stdio = { nil, output_pipe, error_pipe }
-    }, function(code, signal)
 
-    end)
+    local opts = {
+        stdio = {nil, output_pipe, error_pipe}
+    }
+
+    if type(shell_cmd) == 'string' then
+        opts.args = {'-c', shell_cmd}
+    else
+        opts.args = {'-c', shell_cmd.cmd}
+        opts.cwd = shell_cmd.cwd
+    end
+
+    uv.spawn(shell, opts, function(code, signal) end)
 
     local cleaned_up = false
     local cleanup = function()
