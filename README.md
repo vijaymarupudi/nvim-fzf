@@ -112,6 +112,8 @@ Require this plugin using `local fzf = require('fzf')`
     group.
   * `options.fzf_binary` (string): The name (or path) of the `fzf` (or
     `skim`) executable.
+  * `options.fzf_cwd` (string): The path of the working directory to run
+    the fzf command in.
   * `options.fzf_cli_args` (string): Additional fzf command line
     arguments to prepend to the arguments supplied to the fzf functions.
     This is only useful when used in conjunction with
@@ -355,8 +357,13 @@ into `fzf`.
 
 `require("fzf.helpers").cmd_line_transformer(cmd, fn)`
 
-* cmd (string): a shell command
-* fn (function): a function that takes as input a line from the shell
+* `cmd`
+  * if **string**: the shell command to transform
+  * if **table**: a table taking the following properties
+    * `cmd.cmd` (string): the shell command to transform
+    * `cmd.cwd` (string, optional): the working directory to run the
+      shell script in.
+* `fn` (function): a function that takes as input a line from the shell
   command (string) and returns a new line to be sent to `fzf` (string).
 
 ```lua

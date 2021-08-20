@@ -18,7 +18,19 @@ local function process_lines(str, fn)
   return table.concat(t, "\n")
 end
 
-local function cmd_line_transformer(cmd, fn)
+-- takes either a string, or a table with properties
+-- cmd, the shell command to run
+-- cwd, the working directory in which the command will be run
+local function process_cmd_line_transformer_opts(opts)
+  if type(opts) == "string" then
+    opts = { cmd = opts }
+  end
+  return opts
+end
+
+local function cmd_line_transformer(opts, fn)
+
+  opts = process_cmd_line_transformer_opts(opts)
 
   if not fn then
     fn = function (x)
@@ -30,8 +42,9 @@ local function cmd_line_transformer(cmd, fn)
       local stdout = uv.new_pipe(false)
 
       uv.spawn("sh", {
-          args = {'-c', cmd},
-          stdio = {nil, stdout, nil}
+          args = {'-c', opts.cmd},
+          stdio = {nil, stdout, nil},
+          cwd = opts.cwd
       },
       -- need to specify on_exit, see:
       -- https://github.com/luvit/luv/blob/master/docs.md#uvspawnfile-options-onexit

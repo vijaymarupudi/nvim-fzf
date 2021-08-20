@@ -84,6 +84,7 @@ function FZF.raw_fzf(contents, fzf_cli_args, user_options)
   local opts = process_options(fzf_cli_args, user_options)
   local command = opts.fzf_binary
   local fzf_cli_args = opts.fzf_cli_args
+  local cwd = opts.fzf_cwd
   local fifotmpname = vim.fn.tempname()
   local outputtmpname = vim.fn.tempname()
 
@@ -115,21 +116,24 @@ function FZF.raw_fzf(contents, fzf_cli_args, user_options)
   end
 
   local co = coroutine.running()
-  vim.fn.termopen(command, {on_exit = function()
-    local f = io.open(outputtmpname)
-    local output = get_lines_from_file(f)
-    f:close()
-    on_done()
-    vim.fn.delete(fifotmpname)
-    vim.fn.delete(outputtmpname)
-    local ret
-    if #output == 0 then
-      ret = nil
-    else
-      ret = output
+  vim.fn.termopen(command, {
+    cwd = cwd,
+    on_exit = function()
+      local f = io.open(outputtmpname)
+      local output = get_lines_from_file(f)
+      f:close()
+      on_done()
+      vim.fn.delete(fifotmpname)
+      vim.fn.delete(outputtmpname)
+      local ret
+      if #output == 0 then
+        ret = nil
+      else
+        ret = output
+      end
+      coroutine.resume(co, ret)
     end
-    coroutine.resume(co, ret)
-  end})
+  })
   vim.cmd[[set ft=fzf]]
   vim.cmd[[startinsert]]
 
