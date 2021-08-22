@@ -20,7 +20,13 @@ function M.raw_async_action(fn)
   end
 
   local id = registry.register_func(receiving_function)
-  local action_string = string.format("nvim --headless --clean --cmd %s %s %s {+}",
+
+  -- this is for windows WSL and AppImage users, their nvim path isn't just
+  -- 'nvim', it can be something else
+  local nvim_command = vim.v.argv[1]
+
+  local action_string = string.format("%s --headless --clean --cmd %s %s %s {+}",
+    vim.fn.shellescape(nvim_command),
     vim.fn.shellescape("luafile " .. nvim_fzf_directory .. "/action_helper.lua"),
     vim.fn.shellescape(nvim_fzf_directory),
     id)
