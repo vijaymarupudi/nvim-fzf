@@ -49,7 +49,9 @@ function M.raw_action(fn)
 
     if type(ret) == "string" then
       uv.write(pipe, ret, function (err)
-        assert(not err)
+        -- We are NOT asserting, in case fzf closes the pipe before we can send
+        -- the preview.
+        -- assert(not err)
         on_complete()
       end)
     elseif type(ret) == nil then
@@ -83,7 +85,9 @@ function M.raw_action(fn)
       end
     else
       uv.write(pipe, tostring(ret) .. "\n", function (err)
-        assert(not err)
+        -- We are NOT asserting, in case fzf closes the pipe before we can send
+        -- the preview.
+        -- assert(not err) 
         on_complete()
       end)
     end
