@@ -34,15 +34,15 @@ end)
 
 local function_id = tonumber(vim.fn.argv(1))
 local success, errmsg = pcall(function ()
-  -- this is guaranteed to be 2 or more, we are interested in those greater than 2
   local nargs = vim.fn.argc()
   local args = {}
+  -- this is guaranteed to be 2 or more, we are interested in those greater than 2
   for i=3,nargs do
     -- vim uses zero indexing
     table.insert(args, vim.fn.argv(i - 1))
   end
   local environ = vim.fn.environ()
-  local chan_id = vim.fn.sockconnect("pipe", environ.NVIM_LISTEN_ADDRESS, { rpc = true })
+  local chan_id = vim.fn.sockconnect("pipe", vim.fn.argv(0), { rpc = true })
   -- for skim compatibility
   local preview_lines = environ.FZF_PREVIEW_LINES or environ.LINES
   local preview_cols = environ.FZF_PREVIEW_COLUMNS or environ.COLUMNS

@@ -5,6 +5,14 @@ local M = {}
 
 local escape = vim.fn.shellescape
 
+
+-- creates a new address to listen to messages from actions. This is important,
+-- if the user is using a custom fixed $NVIM_LISTEN_ADDRESS. Different neovim
+-- instances will then use the same path as the address and it causes a mess,
+-- i.e. actions stop working on the old instance. So we create our own (random
+-- path) RPC server for this instance if it hasn't been started already.
+local action_server_address = nil
+
 function M.raw_async_action(fn)
 
   local nvim_fzf_directory = vim.g.nvim_fzf_directory
@@ -19,7 +27,12 @@ function M.raw_async_action(fn)
     end)
   end
 
+  if not action_server_address then
+    action_server_address = vim.fn.serverstart()
+  end
+
   local id = registry.register_func(receiving_function)
+
 
   -- this is for windows WSL and AppImage users, their nvim path isn't just
   -- 'nvim', it can be something else
@@ -28,7 +41,7 @@ function M.raw_async_action(fn)
   local action_string = string.format("%s --headless --clean --cmd %s %s %s {+}",
     vim.fn.shellescape(nvim_command),
     vim.fn.shellescape("luafile " .. nvim_fzf_directory .. "/action_helper.lua"),
-    vim.fn.shellescape(nvim_fzf_directory),
+    vim.fn.shellescape(action_server_address),
     id)
   return action_string, id
 end
