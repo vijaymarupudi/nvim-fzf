@@ -387,7 +387,8 @@ coroutine.wrap(function()
 end)()
 ```
 
-`require("fzf.helpers").choices_to_shell_cmd_previewer(fn)`
+`require("fzf.helpers").choices_to_shell_cmd_previewer(fn,
+[fzf_field_expression])`
 
 * `fn(items, fzf_lines, fzf_cols)`: A function that is expected to
   return a shell cmd string to run asynchronously and feed to `fzf`.
@@ -406,6 +407,8 @@ end)()
     fzf.fzf("seq 1 1000", "--preview=" .. action)
   end)()
   ```
+
+* `fzf_field_expression`: See above
 
 ## Examples
 
