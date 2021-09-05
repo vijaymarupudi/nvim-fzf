@@ -288,7 +288,7 @@ end)()
 
 ![](gifs/example_2.gif)
 
-`require("fzf.actions").action(fn)`
+`require("fzf.actions").action(fn, [fzf_field_expression])`
 
 * `fn(selections, fzf_lines, fzf_cols)`: A function that takes a
   selection, performs an action, and optionally returns either a `table`
@@ -301,11 +301,15 @@ end)()
   * `fzf_cols`: number of cols in the preview window i.e.
     `$FZF_PREVIEW_COLS`
 
+* `fzf_field_expression` (string, optional, default: `"{+}"`): This fzf
+  field expression determines what items are sent to the action
+  function.
+
 * **return value**: a shell-escaped string to append to the `fzf` command
   line arguments (`fzf_cli_args`) for `fzf` to run.
 
 
-`require("fzf.actions").raw_action(fn)`
+`require("fzf.actions").raw_action(fn, [fzf_field_expression])`
 
 * Same as above, except it is not shell-escaped, so you can use it for
   complicated `--bind` functions. Take care to escape the result of
@@ -328,7 +332,7 @@ end)()
   end)()
   ```
 
-`require("fzf.actions").async_action(fn)`
+`require("fzf.actions").async_action(fn, [fzf_field_expression])`
 
 
 * `fn(pipe, selections, fzf_lines, fzf_cols)`: Similar to `action(...)`,
@@ -340,7 +344,7 @@ end)()
   This function can be used for previews that take a long time to render
   and calculate from neovim.
 
-`require("fzf.actions").raw_async_action(fn)`
+`require("fzf.actions").raw_async_action(fn, [fzf_field_expression])`
 
 * Same as above, except it is not shell-escaped, so you can use it for
   complicated `--bind` functions. Take care to escape the result of
