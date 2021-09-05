@@ -13,7 +13,11 @@ local escape = vim.fn.shellescape
 -- path) RPC server for this instance if it hasn't been started already.
 local action_server_address = nil
 
-function M.raw_async_action(fn)
+function M.raw_async_action(fn, fzf_field_expression)
+
+  if not fzf_field_expression then
+    fzf_field_expression = "{+}"
+  end
 
   local nvim_fzf_directory = vim.g.nvim_fzf_directory
 
@@ -38,20 +42,21 @@ function M.raw_async_action(fn)
   -- 'nvim', it can be something else
   local nvim_command = vim.v.argv[1]
 
-  local action_string = string.format("%s --headless --clean --cmd %s %s %s {+}",
+  local action_string = string.format("%s --headless --clean --cmd %s %s %s %s",
     vim.fn.shellescape(nvim_command),
     vim.fn.shellescape("luafile " .. nvim_fzf_directory .. "/action_helper.lua"),
     vim.fn.shellescape(action_server_address),
-    id)
+    id,
+    fzf_field_expression)
   return action_string, id
 end
 
-function M.async_action(fn)
-  local action_string, id = M.raw_async_action(fn)
+function M.async_action(fn, fzf_field_expression)
+  local action_string, id = M.raw_async_action(fn, fzf_field_expression)
   return escape(action_string), id
 end
 
-function M.raw_action(fn)
+function M.raw_action(fn, fzf_field_expression)
 
   local receiving_function = function(pipe, ...)
     local ret = fn(...)
@@ -106,11 +111,11 @@ function M.raw_action(fn)
     end
   end
 
-  return M.raw_async_action(receiving_function)
+  return M.raw_async_action(receiving_function, fzf_field_expression)
 end
 
-function M.action(fn)
-  local action_string, id = M.raw_action(fn)
+function M.action(fn, fzf_field_expression)
+  local action_string, id = M.raw_action(fn, fzf_field_expression)
   return escape(action_string), id
 end
 
