@@ -110,7 +110,7 @@ local function cmd_line_transformer(opts, fn)
 end
 
 
-local function choices_to_shell_cmd_previewer(fn)
+local function choices_to_shell_cmd_previewer(fn, fzf_field_expression)
 
   local action = fzf_async_action(function(pipe, ...)
 
@@ -160,7 +160,7 @@ local function choices_to_shell_cmd_previewer(fn)
     output_pipe:read_start(read_cb)
     error_pipe:read_start(read_cb)
 
-  end)
+  end, fzf_field_expression)
 
   return action
 end
