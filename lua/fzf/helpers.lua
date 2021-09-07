@@ -2,20 +2,16 @@ local uv = vim.loop
 local fzf_async_action = require("fzf.actions").async_action
 
 local function find_last_newline(str)
+  local byte = string.byte
   for i=#str,1,-1 do
-    if string.byte(str, i) == 10 then
+    if byte(str, i) == 10 then
         return i
     end
   end
 end
 
 local function process_lines(str, fn)
-  local t = {}
-  local lines = vim.split(str, "\n")
-  for idx, val in ipairs(lines) do
-      t[idx] = fn(val)
-  end
-  return table.concat(t, "\n")
+  return string.gsub(str, '[^\n]+', fn)
 end
 
 -- takes either a string, or a table with properties
