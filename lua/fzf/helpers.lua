@@ -1,10 +1,13 @@
 local uv = vim.loop
 local fzf_async_action = require("fzf.actions").async_action
 
+-- save to upvalue for performance reasons
+local string_byte = string.byte
+local string_sub = string.sub
+
 local function find_last_newline(str)
-  local byte = string.byte
   for i=#str,1,-1 do
-    if byte(str, i) == 10 then
+    if string_byte(str, i) == 10 then
         return i
     end
   end
@@ -86,16 +89,16 @@ local function cmd_line_transformer(opts, fn)
 
         n_writing = n_writing + 1
 
-        if string.byte(data, #data) == 10 then
-            local stripped_without_newline = string.sub(data, 1, #data - 1) 
+        if string_byte(data, #data) == 10 then
+            local stripped_without_newline = string_sub(data, 1, #data - 1) 
             fzf_cb(process_lines(stripped_without_newline, fn), on_write_callback)
         else
             local nl_index = find_last_newline(data)
             if not nl_index then
                 prev_line_content = data
             else
-                prev_line_content = string.sub(data, nl_index + 1)
-                local stripped_without_newline = string.sub(data, 1, nl_index - 1)
+                prev_line_content = string_sub(data, nl_index + 1)
+                local stripped_without_newline = string_sub(data, 1, nl_index - 1)
                 fzf_cb(process_lines(stripped_without_newline, fn), on_write_callback)
             end
         end
