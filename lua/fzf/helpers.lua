@@ -138,6 +138,15 @@ local function choices_to_shell_cmd_previewer(fn, fzf_field_expression)
       end
     end
 
+    local pending_writes = 0
+    local cleanup_request_sent = false
+    local cleanup_if_necessary = function()
+      if pending_writes == 0 and cleanup_request_sent then
+        cleanup()
+      end
+    end
+
+
     local read_cb = function(err, data)
 
       if err then
@@ -145,14 +154,19 @@ local function choices_to_shell_cmd_previewer(fn, fzf_field_expression)
         assert(not err)
       end
       if not data then
-        cleanup()
+        cleanup_request_sent = true
+        cleanup_if_necessary()
         return
       end
+
+      pending_writes = pending_writes + 1
 
       uv.write(pipe, data, function(err)
         if err then
           cleanup()
         end
+        pending_writes = pending_writes - 1
+        cleanup_if_necessary()
       end)
     end
 
