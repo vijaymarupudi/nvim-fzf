@@ -18,7 +18,6 @@ Some handcrafted useful commands at
 
 ## Requirements
 
-* Linux, MacOS, BSD
 * `fzf` binary
 
 ## Usage
@@ -597,14 +596,8 @@ end)()
 
 ## How it works
 
-This plugin uses the `mkfifo` posix program to get a temporary named
-pipe, and uses it to communicate to `fzf`.
-
-Contributions welcome to make this compatible with Windows. I do not
-have a Windows machine, so I cannot test it. It should be possible using
-the Luajit FFI and the
-[`CreateNamedPipeA`](https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-createnamedpipea)
-function from the win32 api.
+This plugin uses a temporary named pipe, and uses it to communicate to
+`fzf`.
 
 ## FAQ
 
