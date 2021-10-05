@@ -102,10 +102,7 @@ function FZF.raw_fzf(contents, fzf_cli_args, user_options)
 
   command = command .. " > " .. vim.fn.shellescape(outputtmpname)
 
-  local output_pipe = uv.new_pipe(false)
-
-  uv.pipe_bind(output_pipe, fifotmpname)
-
+  vim.fn.system({'mkfifo', fifotmpname})
   local fd
   local done_state = false
 
@@ -115,7 +112,7 @@ function FZF.raw_fzf(contents, fzf_cli_args, user_options)
     end
     if done_state then return end
     done_state = true
-    output_pipe:close()
+    uv.fs_close(fd)
   end
 
   local co = coroutine.running()
@@ -145,7 +142,7 @@ function FZF.raw_fzf(contents, fzf_cli_args, user_options)
     goto wait_for_fzf
   end
 
-  fd = uv.fileno(output_pipe)
+  fd = uv.fs_open(fifotmpname, "w", 0)
 
   -- this part runs in the background, when the user has selected, it will
   -- error out, but that doesn't matter so we just break out of the loop.
