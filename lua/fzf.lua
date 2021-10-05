@@ -122,6 +122,7 @@ function FZF.raw_fzf(contents, fzf_cli_args, user_options)
     end
     if done_state then return end
     done_state = true
+    uv.fs_close(fd)
   end
 
   local co = coroutine.running()
