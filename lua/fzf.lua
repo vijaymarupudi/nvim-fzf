@@ -3,6 +3,8 @@ local float = require('fzf.floating_window')
 
 local FZF = {}
 
+local is_windows = vim.fn.has("win32") == 1
+
 local function coroutine_callback(func)
   local co = coroutine.running()
   local callback = function(...)
@@ -102,11 +104,16 @@ function FZF.raw_fzf(contents, fzf_cli_args, user_options)
 
   command = command .. " > " .. vim.fn.shellescape(outputtmpname)
 
-  local output_pipe = uv.new_pipe(false)
-
-  uv.pipe_bind(output_pipe, fifotmpname)
-
+  local output_pipe = nil
   local fd
+  if is_windows then
+    output_pipe = uv.new_pipe(false)
+    uv.pipe_bind(output_pipe, fifotmpname)
+    fd = uv.fileno(output_pipe)
+  else
+    vim.fn.system(("mkfifo %s"):format(vim.fn.shellescape(fifotmpname)))
+  end
+
   local done_state = false
 
   local function on_done()
@@ -115,7 +122,6 @@ function FZF.raw_fzf(contents, fzf_cli_args, user_options)
     end
     if done_state then return end
     done_state = true
-    output_pipe:close()
   end
 
   local co = coroutine.running()
@@ -126,7 +132,11 @@ function FZF.raw_fzf(contents, fzf_cli_args, user_options)
       local output = get_lines_from_file(f)
       f:close()
       on_done()
-      vim.fn.delete(fifotmpname)
+      if is_windows then
+        output_pipe:close()
+      else
+        vim.fn.delete(fifotmpname)
+      end
       vim.fn.delete(outputtmpname)
       local ret
       if #output == 0 then
@@ -145,7 +155,12 @@ function FZF.raw_fzf(contents, fzf_cli_args, user_options)
     goto wait_for_fzf
   end
 
-  fd = uv.fileno(output_pipe)
+  if not is_windows then
+    -- have to open this after there is a reader (termopen), otherwise this
+    -- will block
+    fd = uv.fs_open(fifotmpname, "w", 0)
+  end
+
 
   -- this part runs in the background, when the user has selected, it will
   -- error out, but that doesn't matter so we just break out of the loop.
