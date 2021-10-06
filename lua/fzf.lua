@@ -128,7 +128,7 @@ function FZF.raw_fzf(contents, fzf_cli_args, user_options)
   local co = coroutine.running()
   vim.fn.termopen(command, {
     cwd = cwd,
-    on_exit = function()
+    on_exit = function(_, exit_code, _)
       local f = io.open(outputtmpname)
       local output = get_lines_from_file(f)
       f:close()
@@ -145,7 +145,7 @@ function FZF.raw_fzf(contents, fzf_cli_args, user_options)
       else
         ret = output
       end
-      coroutine.resume(co, ret)
+      coroutine.resume(co, ret, exit_code)
     end
   })
   vim.cmd[[set ft=fzf]]
