@@ -203,11 +203,11 @@ end
 
 function FZF.provided_win_fzf(contents, fzf_cli_args, options)
   local win = vim.api.nvim_get_current_win()
-  local output = FZF.raw_fzf(contents, fzf_cli_args, options)
+  local output, exit_code = FZF.raw_fzf(contents, fzf_cli_args, options)
   local buf = vim.api.nvim_get_current_buf()
   vim.api.nvim_win_close(win, true)
   vim.api.nvim_buf_delete(buf, { force = true })
-  return output
+  return output, exit_code
 end
 
 
@@ -218,7 +218,7 @@ function FZF.fzf(contents, fzf_cli_args, options)
   local win = vim.api.nvim_get_current_win()
   local bufnr, winid = float.create(opts)
 
-  local results = FZF.raw_fzf(contents, fzf_cli_args, options)
+  local results, exit_code  = FZF.raw_fzf(contents, fzf_cli_args, options)
   if vim.api.nvim_win_is_valid(winid) then
     vim.api.nvim_win_close(winid, {force=true})
   end
@@ -228,7 +228,7 @@ function FZF.fzf(contents, fzf_cli_args, options)
   if vim.api.nvim_win_is_valid(win) then
     vim.api.nvim_set_current_win(win)
   end
-  return results
+  return results, exit_code
 end
 
 
