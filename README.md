@@ -228,7 +228,7 @@ respected. You can override them using command line switches or
     ctrl-t,ctrl-v`), previews, and coloring.
 
 
-* **return value**
+* **return values**
 
   * **table**, the lines that fzf returns in the shell
     as a table. If not lines are returned by fzf, the function returns nil
