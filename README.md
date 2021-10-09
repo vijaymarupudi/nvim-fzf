@@ -228,34 +228,40 @@ respected. You can override them using command line switches or
     ctrl-t,ctrl-v`), previews, and coloring.
 
 
-* **return value**: **table**, the lines that fzf returns in the shell
-  as a table. If not lines are returned by fzf, the function returns nil
-  for an easy conditional check.
+* **return value**
 
-  ```lua
-  local result = fzf("fd")
-  if result then
-    -- do something with result[1]
-  end
-  ```
+  * **table**, the lines that fzf returns in the shell
+    as a table. If not lines are returned by fzf, the function returns nil
+    for an easy conditional check.
 
-  ```lua
-  local result = fzf("fd", "--multi")
-  if result then
-    -- do something with result[1] to result[#result]
-  end
-  ```
-
-  ```lua
-  local result = fzf("fd", "--expect=ctrl-t")
-  if result then
-    if result[1] == "ctrl-t" then
-      -- do something with result[2]
-    else
-      -- do something with result[2]
+    ```lua
+    local result = fzf("fd")
+    if result then
+      -- do something with result[1]
     end
-  end
-  ```
+    ```
+
+    ```lua
+    local result = fzf("fd", "--multi")
+    if result then
+      -- do something with result[1] to result[#result]
+    end
+    ```
+
+    ```lua
+    local result = fzf("fd", "--expect=ctrl-t")
+    if result then
+      if result[1] == "ctrl-t" then
+        -- do something with result[2]
+      else
+        -- do something with result[2]
+      end
+    end
+    ```
+
+  * **number**: Representing fzf's exit code.
+
+
 
 ## Action API (fzf Previews, Bindings, Actions in Lua)
 
