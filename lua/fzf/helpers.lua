@@ -52,8 +52,8 @@ local function cmd_line_transformer(opts, fn)
         stdout:close()
       end)
 
-      if opts.cb_pid and type(opts.cb_pid) == 'function' then
-        opts.cb_pid(pid, opts.cb_data)
+      if opts.pid_cb and type(opts.pid_cb) == 'function' then
+        opts.pid_cb(pid)
       end
 
       local n_writing = 0
