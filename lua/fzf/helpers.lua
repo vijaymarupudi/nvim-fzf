@@ -40,7 +40,7 @@ local function cmd_line_transformer(opts, fn)
   return function (fzf_cb)
       local stdout = uv.new_pipe(false)
 
-      uv.spawn("sh", {
+      local _, pid = uv.spawn("sh", {
           args = {'-c', opts.cmd},
           stdio = {nil, stdout, nil},
           cwd = opts.cwd
@@ -51,6 +51,10 @@ local function cmd_line_transformer(opts, fn)
         stdout:read_stop()
         stdout:close()
       end)
+
+      if opts.pid_cb and type(opts.pid_cb) == 'function' then
+        opts.pid_cb(pid)
+      end
 
       local n_writing = 0
       local done = false
