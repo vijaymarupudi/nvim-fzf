@@ -52,7 +52,7 @@ local function cmd_line_transformer(opts, fn)
         stdout:close()
       end)
 
-      if opts.pid_cb and type(opts.pid_cb) == 'function' then
+      if opts.pid_cb then
         opts.pid_cb(pid)
       end
 
