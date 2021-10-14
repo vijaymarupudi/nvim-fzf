@@ -78,7 +78,7 @@ local function cmd_line_transformer(opts, fn)
       -- a line
       local function read_callback(err, data)
         if err then return end
-        if prev_line_content then
+        if data and prev_line_content then
             data = prev_line_content .. data
             prev_line_content = nil
         end
