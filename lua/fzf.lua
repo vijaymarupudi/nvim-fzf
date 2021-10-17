@@ -75,6 +75,16 @@ local function process_options(user_fzf_cli_args, user_options)
   return opts
 end
 
+local function get_temporary_pipe_name()
+  if is_windows then
+    local random_filename = string.gsub(vim.fn.tempname(), "/", "")
+    random_filename = string.gsub(random_filename, "\\", "")
+    return ([[\.\pipe\%s]]):format(random_filename)
+  else
+    return vim.fn.tempname()
+  end
+end
+
 -- contents can be either a table with tostring()able items, or a function that
 -- can be called repeatedly for values. The latter can use coroutines for async
 -- behavior.
@@ -87,7 +97,7 @@ function FZF.raw_fzf(contents, fzf_cli_args, user_options)
   local command = opts.fzf_binary
   local fzf_cli_args = opts.fzf_cli_args
   local cwd = opts.fzf_cwd
-  local fifotmpname = vim.fn.tempname()
+  local fifotmpname = get_temporary_pipe_name()
   local outputtmpname = vim.fn.tempname()
 
   if contents then
