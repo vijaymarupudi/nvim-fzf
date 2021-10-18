@@ -79,7 +79,7 @@ local function get_temporary_pipe_name()
   if is_windows then
     local random_filename = string.gsub(vim.fn.tempname(), "/", "")
     random_filename = string.gsub(random_filename, "\\", "")
-    return ([[\.\pipe\%s]]):format(random_filename)
+    return ([[\\.\pipe\%s]]):format(random_filename)
   else
     return vim.fn.tempname()
   end
@@ -100,16 +100,16 @@ function FZF.raw_fzf(contents, fzf_cli_args, user_options)
   local fifotmpname = get_temporary_pipe_name()
   local outputtmpname = vim.fn.tempname()
 
+  if fzf_cli_args then
+    command = command .. " " .. fzf_cli_args
+  end
+
   if contents then
     if type(contents) == "string" and #contents>0 then
       command = string.format("%s | %s", contents, command)
     else
       command = command .. " < " .. vim.fn.shellescape(fifotmpname)
     end
-  end
-
-  if fzf_cli_args then
-    command = command .. " " .. fzf_cli_args
   end
 
   command = command .. " > " .. vim.fn.shellescape(outputtmpname)
