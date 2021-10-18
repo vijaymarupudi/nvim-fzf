@@ -113,7 +113,6 @@ function FZF.raw_fzf(contents, fzf_cli_args, user_options)
   end
 
   command = command .. " > " .. vim.fn.shellescape(outputtmpname)
-  print(command)
 
   local output_pipe = nil
   local fd
