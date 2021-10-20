@@ -372,6 +372,8 @@ into `fzf`.
     * `cmd.cmd` (string): the shell command to transform
     * `cmd.cwd` (string, optional): the working directory to run the
       shell script in.
+    * `cmd.pid_cb` (function, optional): a callback called with the pid
+      of the shell command when available.
 * `fn` (function): a function that takes as input a line from the shell
   command (string) and returns a new line to be sent to `fzf` (string).
 
