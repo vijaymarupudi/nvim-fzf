@@ -24,8 +24,6 @@ local function coroutinify(func)
   end
 end
 
-local fs_write = coroutinify(uv.fs_write)
-
 local function get_lines_from_file(file)
   local t = {}
   for v in file:lines() do
@@ -85,15 +83,7 @@ local function get_temporary_pipe_name()
   end
 end
 
--- contents can be either a table with tostring()able items, or a function that
--- can be called repeatedly for values. The latter can use coroutines for async
--- behavior.
-function FZF.raw_fzf(contents, fzf_cli_args, user_options)
-  if not coroutine.running() then
-    error("Please run function in a coroutine")
-  end
-  -- overwrite defaults if user supplied own options
-  local opts = process_options(fzf_cli_args, user_options)
+local function generate_fzf_command(opts, contents)
   local command = opts.fzf_binary
   local fzf_cli_args = opts.fzf_cli_args
   local cwd = opts.fzf_cwd
@@ -113,13 +103,33 @@ function FZF.raw_fzf(contents, fzf_cli_args, user_options)
   end
 
   command = command .. " > " .. vim.fn.shellescape(outputtmpname)
+  return command, fifotmpname, outputtmpname
+end
+
+-- contents can be either a table with tostring()able items, or a function that
+-- can be called repeatedly for values. the latter can use coroutines for async
+-- behavior.
+
+function FZF.raw_fzf(contents, fzf_cli_args, user_options)
+  if not coroutine.running() then
+    error("please run function in a coroutine")
+  end
+
+  -- overwrite defaults if user supplied own options
+  local opts = process_options(fzf_cli_args, user_options)
+  local command, fifotmpname, outputtmpname = generate_fzf_command(opts, contents)
 
   local output_pipe = nil
-  local fd
+
+  -- Create the output pipe
+  --
+  -- In the Windows case, this will also connect to it, which it fine. For
+  -- Unix, we cannot connect yet, because opening a pipe that's disconnected on
+  -- the other side will block neovim
+
   if is_windows then
     output_pipe = uv.new_pipe(false)
     uv.pipe_bind(output_pipe, fifotmpname)
-    fd = uv.fileno(output_pipe)
   else
     vim.fn.system(("mkfifo %s"):format(vim.fn.shellescape(fifotmpname)))
   end
@@ -132,7 +142,7 @@ function FZF.raw_fzf(contents, fzf_cli_args, user_options)
     end
     if done_state then return end
     done_state = true
-    uv.fs_close(fd)
+    output_pipe:close()
   end
 
   local co = coroutine.running()
@@ -169,47 +179,186 @@ function FZF.raw_fzf(contents, fzf_cli_args, user_options)
   if not is_windows then
     -- have to open this after there is a reader (termopen), otherwise this
     -- will block
-    fd = uv.fs_open(fifotmpname, "w", 0)
+    output_pipe = uv.new_pipe(false)
+    local fd = uv.fs_open(fifotmpname, "w", -1)
+    output_pipe:open(fd)
+    -- print(uv.pipe_getpeername(output_pipe))
+    -- print("HERE")
   end
 
 
   -- this part runs in the background, when the user has selected, it will
   -- error out, but that doesn't matter so we just break out of the loop.
-  coroutine.wrap(function ()
-    if contents then
-      if type(contents) == "table" then
-        for _, v in ipairs(contents) do
-          local err, bytes = fs_write(fd, tostring(v) .. "\n", -1)
-          if err then error(err) end
+  if contents then
+    if type(contents) == "table" then
+      local i = 1
+      local action
+      action = function(err)
+        if err then
+          on_done()
+          error(err)
         end
-        on_done()
-      else
-        contents(function (usrval, cb)
-          if done_state then return end
-          if usrval == nil then
+        if i <= #contents then
+          local idx = i
+          i = i + 1
+          output_pipe:write(tostring(contents[idx]) .. "\n", action)
+        else
+          on_done()
+        end
+      end
+      action(false)
+    else
+      contents(function (usrval, cb)
+        if done_state then return end
+        if usrval == nil then
+          on_done()
+          if cb then cb(nil) end
+          return
+        end
+        output_pipe:write(usrval, function (err)
+          if err then
+            if cb then cb(err) end
             on_done()
-            if cb then cb(nil) end
             return
           end
-          uv.fs_write(fd, tostring(usrval) .. "\n", -1, function (err, bytes)
-            if err then
-              if cb then cb(err) end
-              on_done()
-              return
-            end
 
-            if cb then cb(nil) end
-
-          end)
-        end, fd)
-      end
+          if cb then cb(nil) end
+        end)
+      end, output_pipe)
     end
-  end)()
+  end
 
   ::wait_for_fzf::
 
   return coroutine.yield()
 end
+
+
+-- contents can be either a table with tostring()able items, or a function that
+-- can be called repeatedly for values. the latter can use coroutines for async
+-- behavior.
+-- function fzf.raw_fzf(contents, fzf_cli_args, user_options)
+--   if not coroutine.running() then
+--     error("please run function in a coroutine")
+--   end
+--   -- overwrite defaults if user supplied own options
+--   local opts = process_options(fzf_cli_args, user_options)
+--   local command = opts.fzf_binary
+--   local fzf_cli_args = opts.fzf_cli_args
+--   local cwd = opts.fzf_cwd
+--   local fifotmpname = get_temporary_pipe_name()
+--   local outputtmpname = vim.fn.tempname()
+
+--   if fzf_cli_args then
+--     command = command .. " " .. fzf_cli_args
+--   end
+
+--   if contents then
+--     if type(contents) == "string" and #contents>0 then
+--       command = string.format("%s | %s", contents, command)
+--     else
+--       command = command .. " < " .. vim.fn.shellescape(fifotmpname)
+--     end
+--   end
+
+--   command = command .. " > " .. vim.fn.shellescape(outputtmpname)
+
+--   local output_pipe = nil
+--   local fd
+--   if is_windows then
+--     output_pipe = uv.new_pipe(false)
+--     uv.pipe_bind(output_pipe, fifotmpname)
+--     fd = uv.fileno(output_pipe)
+--   else
+--     vim.fn.system(("mkfifo %s"):format(vim.fn.shellescape(fifotmpname)))
+--   end
+
+--   local done_state = false
+
+--   local function on_done()
+--     if not contents or type(contents) == "string" then
+--       return
+--     end
+--     if done_state then return end
+--     done_state = true
+--     uv.fs_close(fd)
+--   end
+
+--   local co = coroutine.running()
+--   vim.fn.termopen(command, {
+--     cwd = cwd,
+--     on_exit = function(_, exit_code, _)
+--       local f = io.open(outputtmpname)
+--       local output = get_lines_from_file(f)
+--       f:close()
+--       on_done()
+--       if is_windows then
+--         output_pipe:close()
+--       else
+--         vim.fn.delete(fifotmpname)
+--       end
+--       vim.fn.delete(outputtmpname)
+--       local ret
+--       if #output == 0 then
+--         ret = nil
+--       else
+--         ret = output
+--       end
+--       coroutine.resume(co, ret, exit_code)
+--     end
+--   })
+--   vim.cmd[[set ft=fzf]]
+--   vim.cmd[[startinsert]]
+
+
+--   if not contents or type(contents) == "string" then
+--     goto wait_for_fzf
+--   end
+
+--   if not is_windows then
+--     -- have to open this after there is a reader (termopen), otherwise this
+--     -- will block
+--     fd = uv.fs_open(fifotmpname, "w", 0)
+--   end
+
+
+--   -- this part runs in the background, when the user has selected, it will
+--   -- error out, but that doesn't matter so we just break out of the loop.
+--   coroutine.wrap(function ()
+--     if contents then
+--       if type(contents) == "table" then
+--         for _, v in ipairs(contents) do
+--           local err, bytes = fs_write(fd, tostring(v) .. "\n", -1)
+--           if err then error(err) end
+--         end
+--         on_done()
+--       else
+--         contents(function (usrval, cb)
+--           if done_state then return end
+--           if usrval == nil then
+--             on_done()
+--             if cb then cb(nil) end
+--             return
+--           end
+--           uv.fs_write(fd, tostring(usrval) .. "\n", -1, function (err, bytes)
+--             if err then
+--               if cb then cb(err) end
+--               on_done()
+--               return
+--             end
+
+--             if cb then cb(nil) end
+
+--           end)
+--         end, fd)
+--       end
+--     end
+--   end)()
+
+--   ::wait_for_fzf::
+
+--   return coroutine.yield()
+-- end
 
 function FZF.provided_win_fzf(contents, fzf_cli_args, options)
   local win = vim.api.nvim_get_current_win()
