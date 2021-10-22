@@ -86,9 +86,9 @@ end
 local function generate_fzf_command(opts, contents)
   local command = opts.fzf_binary
   local fzf_cli_args = opts.fzf_cli_args
-  local cwd = opts.fzf_cwd
   local fifotmpname = get_temporary_pipe_name()
   local outputtmpname = vim.fn.tempname()
+  local cwd = opts.fzf_cwd
 
   if fzf_cli_args then
     command = command .. " " .. fzf_cli_args
@@ -103,133 +103,210 @@ local function generate_fzf_command(opts, contents)
   end
 
   command = command .. " > " .. vim.fn.shellescape(outputtmpname)
-  return command, fifotmpname, outputtmpname
+  return command, fifotmpname, outputtmpname, cwd
 end
+
+local WriteQueue = {}
+WriteQueue.__index = WriteQueue
+
+function WriteQueue:new(output_pipe)
+  local q = {
+    done_state = false,
+    output_pipe = output_pipe,
+    n_enqueued = 0,
+    close_when_done_flag = false
+  }
+  setmetatable(q, self)
+  return q
+end
+
+function WriteQueue:close()
+  if not self.done_state then
+    self.done_state = true
+    self.output_pipe:close()
+  end
+end
+
+function WriteQueue:close_when_done()
+  self.close_when_done_flag = true
+  if self.n_enqueued == 0 then
+    self:close()
+  end
+end
+
+function WriteQueue:enqueue(input, cb)
+  if self.done_state then
+    if cb then cb("PIPE closed") end
+    return nil
+  end
+  self.n_enqueued = self.n_enqueued + 1
+  self.output_pipe:write(tostring(input), function(err)
+    if err then
+      self:close()
+      if cb then cb(err) end
+      return nil
+    end
+    self.n_enqueued = self.n_enqueued - 1
+    if self.n_enqueued == 0 and self.close_when_done_flag then
+      self:close()
+    end
+    if cb then cb(nil) end
+  end)
+end
+
+local FZFObject = {}
+FZFObject.__index = FZFObject
+
 
 -- contents can be either a table with tostring()able items, or a function that
 -- can be called repeatedly for values. the latter can use coroutines for async
 -- behavior.
-
-function FZF.raw_fzf(contents, fzf_cli_args, user_options)
-  if not coroutine.running() then
-    error("please run function in a coroutine")
-  end
+function FZFObject:new(contents, fzf_cli_args, user_options, on_complete)
+  local o = {}
 
   -- overwrite defaults if user supplied own options
   local opts = process_options(fzf_cli_args, user_options)
-  local command, fifotmpname, outputtmpname = generate_fzf_command(opts, contents)
+  local command, fifotmpname, outputtmpname, cwd = generate_fzf_command(opts, contents)
 
-  local output_pipe = nil
+  o.command = command
+  o.fifotmpname = fifotmpname
+  o.outputtmpname = outputtmpname
+  o.cwd = cwd
+  o.contents = contents
+
+  o.on_complete = on_complete
+  o.write_queue = nil
+  o.windows_pipe_server = nil
+
+  setmetatable(o, self)
+  return o
+end
+
+function FZFObject:cleanup(info)
+  local f = io.open(self.outputtmpname)
+  local output = get_lines_from_file(f)
+  f:close()
+
+  -- shell commands directly piped to fzf won't have one
+  if self.write_queue then
+    self.write_queue:close()
+  end
+
+  -- windows machines will use this
+  if self.windows_pipe_server then
+      self.windows_pipe_server:close()
+  end
+
+  -- in windows, pipes that are not used are automatically cleaned up
+  if not is_windows then
+    vim.fn.delete(self.fifotmpname)
+  end
+
+  vim.fn.delete(self.outputtmpname)
+
+  -- returning to the user
+  local ret
+  if #output == 0 then
+    ret = nil
+  else
+    ret = output
+  end
+
+  self.on_complete(ret, info.exit_code)
+end
+
+function FZFObject:run()
+
 
   -- Create the output pipe
   --
-  -- In the Windows case, this will also connect to it, which it fine. For
+  -- In the Windows case, this acts like a server, which is fine. For
   -- Unix, we cannot connect yet, because opening a pipe that's disconnected on
   -- the other side will block neovim
-
   if is_windows then
-    output_pipe = uv.new_pipe(false)
-    uv.pipe_bind(output_pipe, fifotmpname)
+    self.windows_pipe_server = uv.new_pipe(false)
+    self.windows_pipe_server:bind(self.fifotmpname)
+    self.windows_pipe_server:listen(16, function()
+      local output_pipe = uv.new_pipe(false)
+      self.windows_pipe_server:accept(output_pipe)
+      self.write_queue = WriteQueue:new(output_pipe)
+      self:handle_contents()
+    end)
   else
-    vim.fn.system(("mkfifo %s"):format(vim.fn.shellescape(fifotmpname)))
+    vim.fn.system(("mkfifo %s"):format(vim.fn.shellescape(self.fifotmpname)))
   end
 
-  local done_state = false
-
-  local function on_done()
-    if not contents or type(contents) == "string" then
-      return
-    end
-    if done_state then return end
-    done_state = true
-    output_pipe:close()
-  end
-
-  local co = coroutine.running()
-  vim.fn.termopen(command, {
-    cwd = cwd,
+  vim.fn.termopen(self.command, {
+    cwd = self.cwd,
     on_exit = function(_, exit_code, _)
-      local f = io.open(outputtmpname)
-      local output = get_lines_from_file(f)
-      f:close()
-      on_done()
-      if is_windows then
-        output_pipe:close()
-      else
-        vim.fn.delete(fifotmpname)
-      end
-      vim.fn.delete(outputtmpname)
-      local ret
-      if #output == 0 then
-        ret = nil
-      else
-        ret = output
-      end
-      coroutine.resume(co, ret, exit_code)
+      self:cleanup({exit_code = exit_code})
     end
   })
+
   vim.cmd[[set ft=fzf]]
   vim.cmd[[startinsert]]
 
-
-  if not contents or type(contents) == "string" then
-    goto wait_for_fzf
+  if not self.contents or type(self.contents) == "string" then
+    return
   end
+  -- contents here is either a table or a function
 
   if not is_windows then
     -- have to open this after there is a reader (termopen), otherwise this
     -- will block
-    output_pipe = uv.new_pipe(false)
-    local fd = uv.fs_open(fifotmpname, "w", -1)
+    local output_pipe = uv.new_pipe(false)
+    local fd = uv.fs_open(self.fifotmpname, "w", -1)
     output_pipe:open(fd)
-    -- print(uv.pipe_getpeername(output_pipe))
-    -- print("HERE")
+    self.write_queue = WriteQueue:new(output_pipe)
+    self:handle_contents()
   end
 
+end
 
-  -- this part runs in the background, when the user has selected, it will
-  -- error out, but that doesn't matter so we just break out of the loop.
-  if contents then
-    if type(contents) == "table" then
-      local i = 1
-      local action
-      action = function(err)
-        if err then
-          on_done()
-          error(err)
-        end
-        if i <= #contents then
-          local idx = i
-          i = i + 1
-          output_pipe:write(tostring(contents[idx]) .. "\n", action)
-        else
-          on_done()
-        end
+
+function FZFObject:handle_contents()
+
+    local async_enqueue_function = function(usrval, cb)
+      if usrval == nil then
+        self.write_queue:close_when_done()
+      else
+        self.write_queue:enqueue(usrval, cb)
       end
-      action(false)
-    else
-      contents(function (usrval, cb)
-        if done_state then return end
-        if usrval == nil then
-          on_done()
-          if cb then cb(nil) end
-          return
-        end
-        output_pipe:write(usrval, function (err)
-          if err then
-            if cb then cb(err) end
-            on_done()
-            return
-          end
-
-          if cb then cb(nil) end
-        end)
-      end, output_pipe)
     end
+
+    local async_enqueue_function_with_newline = function(usrval, cb)
+      if usrval == nil then
+        async_enqueue_function(usrval, cb)
+      else
+        async_enqueue_function(usrval, cb)
+        async_enqueue_function("\n");
+      end
+    end
+
+  if type(self.contents) == "table" then
+    for _, v in ipairs(self.contents) do
+      async_enqueue_function_with_newline(v)
+    end
+    async_enqueue_function_with_newline(nil)
+  else
+
+    self.contents(async_enqueue_function_with_newline,
+             async_enqueue_function,
+             self.write_queue.output_pipe)
   end
+end
 
-  ::wait_for_fzf::
 
+function FZF.raw_fzf(contents, fzf_cli_args, user_options)
+ if not coroutine.running() then
+   error("please run function in a coroutine")
+ end
+  local co = coroutine.running()
+  local fzf_obj = FZFObject:new(contents, fzf_cli_args, user_options, function(ret, exit_code)
+    coroutine.resume(co, ret, exit_code)
+  end)
+  
+  fzf_obj:run()
   return coroutine.yield()
 end
 
