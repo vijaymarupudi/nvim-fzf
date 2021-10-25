@@ -233,10 +233,24 @@ function FZFObject:run()
       self:handle_contents()
     end)
   else
-    vim.fn.system(("mkfifo %s"):format(vim.fn.shellescape(self.fifotmpname)))
+
+    -- avoids $SHELL for performance reasons
+    vim.fn.system({"mkfifo", self.fifotmpname})
   end
 
-  vim.fn.termopen(self.command, {
+ 
+  local termopen_first_arg
+
+  if is_windows then
+    termopen_first_arg = self.command
+  else
+    -- for performance reasons, run this command in `sh`. This is because the
+    -- default shells of some users take a long time to launch, and this
+    -- creates a perceived delay that we want to avoid.
+    termopen_first_arg = {"sh", "-c", self.command}
+  end
+
+  vim.fn.termopen(termopen_first_arg, {
     cwd = self.cwd,
     on_exit = function(_, exit_code, _)
       self:cleanup({exit_code = exit_code})
