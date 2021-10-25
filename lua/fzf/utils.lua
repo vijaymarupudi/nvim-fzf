@@ -15,7 +15,11 @@ end
 function WriteQueue:close()
   if not self.done_state then
     self.done_state = true
-    self.output_pipe:close()
+    -- in case the user has closed the pipe first, we don't want the double
+    -- close error to propagate.
+    pcall(function()
+      self.output_pipe:close()
+    end)
   end
 end
 

@@ -1,5 +1,6 @@
 local uv = vim.loop
 local fzf_async_action = require("fzf.actions").async_action
+local WriteQueue = require("fzf.utils").WriteQueue
 
 -- save to upvalue for performance reasons
 local string_byte = string.byte
@@ -37,81 +38,78 @@ local function cmd_line_transformer(opts, fn)
     end
   end
 
-  return function (fzf_cb)
-      local stdout = uv.new_pipe(false)
+  return function (_, _, output_pipe)
+    local write_queue = WriteQueue:new(output_pipe)
+    local stdout = uv.new_pipe(false)
+    local stdout_closed = false
+    local process_ended = false
 
-      local _, pid = uv.spawn("sh", {
-          args = {'-c', opts.cmd},
-          stdio = {nil, stdout, nil},
-          cwd = opts.cwd
-      },
-      -- need to specify on_exit, see:
-      -- https://github.com/luvit/luv/blob/master/docs.md#uvspawnfile-options-onexit
-      function()
-        stdout:read_stop()
+    local _, pid = uv.spawn("sh", {
+      args = {'-c', opts.cmd},
+      stdio = {nil, stdout, nil},
+      cwd = opts.cwd
+    },
+
+    -- need to specify on_exit, see:
+    -- https://github.com/luvit/luv/blob/master/docs.md#uvspawnfile-options-onexit
+    function(...)
+      process_ended = true
+      if not stdout_closed then
+        stdout_closed = true
         stdout:close()
-      end)
-
-      if opts.pid_cb then
-        opts.pid_cb(pid)
       end
+      write_queue:close_when_done()
+    end)
 
-      local n_writing = 0
-      local done = false
-      local prev_line_content = nil
+    if opts.pid_cb then
+      opts.pid_cb(pid)
+    end
 
-      local function finish()
-        fzf_cb(nil, function () end)
-        stdout:shutdown()
-      end
 
-      local function on_write_callback(err)
-        if err then done = true end
-        n_writing = n_writing - 1
-        if done and n_writing == 0 then
-          finish()
+    local function on_write_callback(err)
+      if err and not process_ended then
+        -- this error is EPIPE, i.e. FZF has chosen something
+        if not stdout_closed then
+          stdout_closed = true
+          stdout:close()
         end
       end
+    end
 
-      -- the reason for this complexity is because we don't get data
-      -- callbacks that neatly end with lines, we sometimes get data in between
-      -- a line
-      local function read_callback(err, data)
-        if err then return end
-        if data and prev_line_content then
-            data = prev_line_content .. data
-            prev_line_content = nil
-        end
-        -- eol
-        if not data then
-            done = true
-            if n_writing == 0 then
-              finish()
-            end
-            return
-        end
+    -- the reason for this complexity is because we don't get data
+    -- callbacks that neatly end with lines, we sometimes get data in between
+    -- a line
 
-        n_writing = n_writing + 1
+    local prev_line_content = nil
 
-        if string_byte(data, #data) == 10 then
-            local stripped_without_newline = string_sub(data, 1, #data - 1) 
-            fzf_cb(process_lines(stripped_without_newline, fn), on_write_callback)
+    local function read_callback(err, data)
+      if err then return end
+      if data and prev_line_content then
+        data = prev_line_content .. data
+        prev_line_content = nil
+      end
+      -- explicitly not handling EOF, the process should end at the same
+      -- time, and we'll handle cleanup there
+
+      if not data then return end
+
+      if string_byte(data, #data) == 10 then
+        write_queue:enqueue(process_lines(data, fn), on_write_callback)
+      else
+        local nl_index = find_last_newline(data)
+        if not nl_index then
+          prev_line_content = data
         else
-            local nl_index = find_last_newline(data)
-            if not nl_index then
-                prev_line_content = data
-            else
-                prev_line_content = string_sub(data, nl_index + 1)
-                local stripped_without_newline = string_sub(data, 1, nl_index - 1)
-                fzf_cb(process_lines(stripped_without_newline, fn), on_write_callback)
-            end
+          prev_line_content = string_sub(data, nl_index + 1)
+          write_queue:enqueue(process_lines(string_sub(data, 1, nl_index), fn),
+          on_write_callback)
         end
       end
+    end
 
-      stdout:read_start(read_callback)
+    stdout:read_start(read_callback)
   end
 end
-
 
 local function choices_to_shell_cmd_previewer(fn, fzf_field_expression)
 
@@ -122,7 +120,7 @@ local function choices_to_shell_cmd_previewer(fn, fzf_field_expression)
     local error_pipe = uv.new_pipe(false)
 
     local shell = vim.env.SHELL or "sh"
-    
+
     uv.spawn(shell, {
       args = { "-c", shell_cmd },
       stdio = { nil, output_pipe, error_pipe }
