@@ -16,6 +16,8 @@ Some handcrafted useful commands at
 * [`fzf-lua`](https://github.com/ibhagwan/fzf-lua)
 * [`nvim-fzf-commands`](https://github.com/vijaymarupudi/nvim-fzf-commands).
 
+Tested on Linux, MacOS, and Windows.
+
 ## Requirements
 
 * `fzf` binary
@@ -57,8 +59,7 @@ Plug 'vijaymarupudi/nvim-fzf'
 
 ## Important information
 
-**You should run all the functions in this module in a coroutine. This
-allows for an easy api**
+**All `fzf` functions should be run in a coroutine.**
 
 Example:
 
@@ -191,7 +192,7 @@ respected. You can override them using command line switches or
     local result = fzf({1, 2, "item"})
     ```
 
-  * if **function**: calls the function with a callback function to
+  * if **function**: `nvim-fzf` calls the function with a callback function to
     write vals to the fzf pipe. This api is asynchronous, making it
     possible to use fzf for long running applications and making the
     user interface snappy. Callbacks can be concurrent.
@@ -222,11 +223,21 @@ respected. You can override them using command line switches or
     end)
     ```
 
+    The function is also called with two other optional arguments for more
+    advanced usage.
+
+    * The 2nd argument is a variant of the callback function (which is
+      passed as the 1st argument), but it does not add newlines to the
+      elements. This is useful to pass through information directly to
+      the pipe.
+
+    * The 3rd argument is the `vim.loop` / `luv` pipe to FZF. Use as you
+      see fit!
+
 * `fzf_cli_args`: **string**, A list of command line arguments for fzf.
 
     Can use to expect different key bindings (e.g. `--expect
     ctrl-t,ctrl-v`), previews, and coloring.
-
 
 * **return values**
 
@@ -372,6 +383,8 @@ into `fzf`.
     * `cmd.cmd` (string): the shell command to transform
     * `cmd.cwd` (string, optional): the working directory to run the
       shell script in.
+    * `cmd.pid_cb` (function, optional): a callback called with the pid
+      of the shell command when available.
 * `fn` (function): a function that takes as input a line from the shell
   command (string) and returns a new line to be sent to `fzf` (string).
 
