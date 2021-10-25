@@ -140,7 +140,7 @@ function WriteQueue:enqueue(input, cb)
     return nil
   end
   self.n_enqueued = self.n_enqueued + 1
-  self.output_pipe:write(tostring(input), function(err)
+  self.output_pipe:write(input, function(err)
     if err then
       self:close()
       if cb then cb(err) end
@@ -270,16 +270,15 @@ function FZFObject:handle_contents()
       if usrval == nil then
         self.write_queue:close_when_done()
       else
-        self.write_queue:enqueue(usrval, cb)
+        self.write_queue:enqueue(tostring(usrval), cb)
       end
     end
 
     local async_enqueue_function_with_newline = function(usrval, cb)
       if usrval == nil then
-        async_enqueue_function(usrval, cb)
+        self.write_queue:close_when_done()
       else
-        async_enqueue_function(usrval, cb)
-        async_enqueue_function("\n");
+        self.write_queue:enqueue({tostring(usrval), "\n"}, cb)
       end
     end
 
