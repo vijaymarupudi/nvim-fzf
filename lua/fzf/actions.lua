@@ -42,12 +42,15 @@ function M.raw_async_action(fn, fzf_field_expression)
   -- 'nvim', it can be something else
   local nvim_command = vim.v.argv[1]
 
-  local action_string = string.format("%s --headless --clean --cmd %s %s %s %s",
+  local call_args = ("action_server=[[%s]], function_id=%d"):format(
+    action_server_address, id)
+
+  local action_string = string.format("%s -n --headless --clean --cmd %s %s",
     vim.fn.shellescape(nvim_command),
-    vim.fn.shellescape("luafile " .. nvim_fzf_directory .. "/action_helper.lua"),
-    vim.fn.shellescape(action_server_address),
-    id,
+    vim.fn.shellescape(("lua loadfile([[%s]])().rpc_nvim_exec_lua({%s})")
+      :format(nvim_fzf_directory .. "/action_helper.lua", call_args)),
     fzf_field_expression)
+
   return action_string, id
 end
 
