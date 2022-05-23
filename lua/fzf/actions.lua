@@ -5,17 +5,16 @@ local M = {}
 
 local escape = vim.fn.shellescape
 
-
 local function lua_escape(str)
    local items = {}
    local start_index = 1
-   local location = string.find(str, "]]", start_index, true)
+   local location = string.find(str, "]", start_index, true)
    while location do
       local good_part = string.sub(str, start_index, location - 1)
       table.insert(items, "[[" .. good_part .. "]]")
-      table.insert(items, "\"" .. "]]" .. "\"")
-      start_index = location + 2
-      location = string.find(str, "]]", start_index, true)
+      table.insert(items, "\"" .. "]" .. "\"")
+      start_index = location + 1
+      location = string.find(str, "]", start_index, true)
    end
    table.insert(items, "[[" .. string.sub(str, start_index) .. "]]")
    return table.concat(items, "..")
