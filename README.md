@@ -497,7 +497,7 @@ coroutine.wrap(function ()
   if not choices then
     vim.cmd("colorscheme " .. current_colorscheme)
   else
-    vim.cmd("colorscheme" .. choices[1])
+    vim.cmd("colorscheme " .. choices[1])
   end
 end)()
 
