@@ -55,7 +55,7 @@ function M.raw_async_action(fn, fzf_field_expression)
 
   -- this is for windows WSL and AppImage users, their nvim path isn't just
   -- 'nvim', it can be something else
-  local nvim_command = vim.v.argv[1]
+  local nvim_command = vim.v.progpath
 
   local call_arg_table_string = ("{ action_server=%s, function_id=%d }"):format(
      lua_escape(action_server_address), id)
