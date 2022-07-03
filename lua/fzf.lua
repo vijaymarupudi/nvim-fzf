@@ -90,6 +90,7 @@ local function generate_fzf_command(opts, contents)
   local fifotmpname = get_temporary_pipe_name()
   local outputtmpname = vim.fn.tempname()
   local cwd = opts.fzf_cwd
+  local fzf_default_command = nil
 
   if fzf_cli_args then
     command = command .. " " .. fzf_cli_args
@@ -97,14 +98,14 @@ local function generate_fzf_command(opts, contents)
 
   if contents then
     if type(contents) == "string" and #contents>0 then
-      command = string.format("%s | %s", contents, command)
+      fzf_default_command = contents
     else
       command = command .. " < " .. vim.fn.shellescape(fifotmpname)
     end
   end
 
   command = command .. " > " .. vim.fn.shellescape(outputtmpname)
-  return command, fifotmpname, outputtmpname, cwd
+  return command, fifotmpname, outputtmpname, cwd, fzf_default_command
 end
 
 local FZFObject = {}
@@ -119,13 +120,15 @@ function FZFObject:new(contents, fzf_cli_args, user_options, on_complete)
 
   -- overwrite defaults if user supplied own options
   local opts = process_options(fzf_cli_args, user_options)
-  local command, fifotmpname, outputtmpname, cwd = generate_fzf_command(opts, contents)
+  local command, fifotmpname, outputtmpname, cwd, fzf_default_command =
+    generate_fzf_command(opts, contents)
 
   o.command = command
   o.fifotmpname = fifotmpname
   o.outputtmpname = outputtmpname
   o.cwd = cwd
   o.contents = contents
+  o.fzf_default_command = fzf_default_command
 
   o.on_complete = on_complete
   o.write_queue = nil
@@ -205,6 +208,10 @@ function FZFObject:run()
 
   vim.fn.termopen(termopen_first_arg, {
     cwd = self.cwd,
+    env = {
+      ['FZF_DEFAULT_COMMAND'] = self.fzf_default_command,
+      ['SKIM_DEFAULT_COMMAND'] = self.fzf_default_command,
+    },
     on_exit = function(_, exit_code, _)
       self:cleanup({exit_code = exit_code})
     end
