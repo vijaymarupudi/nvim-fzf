@@ -206,6 +206,10 @@ function FZFObject:run()
     termopen_first_arg = {"sh", "-c", self.command}
   end
 
+  -- env should be nil if it is an empty table, this is probably a
+  -- neovim/luv quirk, see discussion at
+  -- https://github.com/vijaymarupudi/nvim-fzf/pull/47
+
   local env = nil
 
   if self.fzf_default_command then
