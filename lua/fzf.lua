@@ -208,10 +208,10 @@ function FZFObject:run()
 
   vim.fn.termopen(termopen_first_arg, {
     cwd = self.cwd,
-    env = {
+    env = self.fzf_default_command and {
       ['FZF_DEFAULT_COMMAND'] = self.fzf_default_command,
       ['SKIM_DEFAULT_COMMAND'] = self.fzf_default_command,
-    },
+    } or nil,
     on_exit = function(_, exit_code, _)
       self:cleanup({exit_code = exit_code})
     end
