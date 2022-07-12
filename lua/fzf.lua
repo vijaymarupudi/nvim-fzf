@@ -206,12 +206,18 @@ function FZFObject:run()
     termopen_first_arg = {"sh", "-c", self.command}
   end
 
+  local env = nil
+
+  if self.fzf_default_command then
+     env = {
+      ['FZF_DEFAULT_COMMAND'] = self.fzf_default_command,
+      ['SKIM_DEFAULT_COMMAND'] = self.fzf_default_command
+    }
+  end
+
   vim.fn.termopen(termopen_first_arg, {
     cwd = self.cwd,
-    env = self.fzf_default_command and {
-      ['FZF_DEFAULT_COMMAND'] = self.fzf_default_command,
-      ['SKIM_DEFAULT_COMMAND'] = self.fzf_default_command,
-    } or nil,
+    env = env,
     on_exit = function(_, exit_code, _)
       self:cleanup({exit_code = exit_code})
     end
