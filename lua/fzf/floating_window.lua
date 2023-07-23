@@ -22,7 +22,7 @@ function M.create(opts)
   --Floating window title
   if opts.title then
     win_opts.title = opts.title
-    win_opts.title_pos = opts.title or 'center'
+    win_opts.title_pos = opts.title_pos or 'center'
   end
 
   local bufnr = vim.api.nvim_create_buf(false, true)
