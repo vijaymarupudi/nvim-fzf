@@ -96,6 +96,8 @@ Require this plugin using `local fzf = require('fzf')`
   settings. You can use this to change the default floating window
   behavior or the fzf binary.
 
+  * `options.title` (optional string): title of the window
+  * `options.title_pos` (string, default: 'center'): where the title should be placed
   * `options.width` (number): width of the window
   * `options.height` (number): height of the window
   * `options.row` (number): row from top where window starts

@@ -19,6 +19,12 @@ function M.create(opts)
   win_opts.row = opts.row or math.floor(((lines - win_opts.height) / 2) - 1)
   win_opts.col = opts.col or math.floor((columns - win_opts.width) / 2)
 
+  --Floating window title
+  if opts.title then
+    win_opts.title = opts.title
+    win_opts.title_pos = opts.title_pos or 'center'
+  end
+
   local bufnr = vim.api.nvim_create_buf(false, true)
   local winid = vim.api.nvim_open_win(bufnr, true, win_opts)
 
