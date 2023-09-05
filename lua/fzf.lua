@@ -200,7 +200,7 @@ function FZFObject:run()
   if is_windows then
     -- for compatibility reasons, run this command in `cmd`. This is because
     -- PowerShell does not support the `<` operator that some fzf commands use.
-    termopen_first_arg = {"cmd", "/c", self.command}
+    termopen_first_arg = { "cmd", "/d", "/e:off", "/f:off", "/v:off", "/c", self.command }
   else
     -- for performance reasons, run this command in `sh`. This is because the
     -- default shells of some users take a long time to launch, and this
