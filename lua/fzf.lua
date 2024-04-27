@@ -287,6 +287,9 @@ function FZF.raw_fzf(contents, fzf_cli_args, user_options)
    error("please run function in a coroutine")
  end
   local co = coroutine.running()
+  if fzf_cli_args then
+    fzf_cli_args = ' ' .. fzf_cli_args .. ' '
+  end
   local fzf_obj = FZFObject:new(contents, fzf_cli_args, user_options, function(ret, exit_code)
     coroutine.resume(co, ret, exit_code)
   end)
