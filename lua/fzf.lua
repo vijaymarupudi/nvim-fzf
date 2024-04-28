@@ -69,7 +69,7 @@ local function process_options(user_fzf_cli_args, user_options)
     opts.border = "rounded"
   end
 
-  opts.fzf_cli_args = opts.fzf_cli_args .. user_fzf_cli_args
+  opts.fzf_cli_args = opts.fzf_cli_args .. " " .. user_fzf_cli_args
 
   return opts
 end
