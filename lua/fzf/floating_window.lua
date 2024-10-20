@@ -9,9 +9,20 @@ function M.create(opts)
     columns, lines = vim.api.nvim_win_get_width(0), vim.api.nvim_win_get_height(0)
   end
 
+  local width
+  if     opts.width == 'max' then width = columns
+  elseif opts.width          then width = opts.width
+  else                            width = math.min(columns - 4, math.max(80, columns - 20))
+  end
+
+  local height
+  if     opts.height == 'max' then height = lines - (relative == 'editor' and vim.o.cmdheight or 0)
+  elseif opts.height          then height = opts.height
+  else                             height = math.min(lines - 4, math.max(20, lines - 10))
+  end
+
   local win_opts = {
-    width = opts.width or math.min(columns - 4, math.max(80, columns - 20)),
-    height = opts.height or math.min(lines - 4, math.max(20, lines - 10)),
+    width = width, height = height,
     style = 'minimal',
     relative = relative,
     border = opts.border
