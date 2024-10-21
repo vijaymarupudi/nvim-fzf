@@ -98,8 +98,8 @@ Require this plugin using `local fzf = require('fzf')`
 
   * `options.title` (optional string): title of the window
   * `options.title_pos` (string, default: 'center'): where the title should be placed
-  * `options.width` (number): width of the window
-  * `options.height` (number): height of the window
+  * `options.width` (number/"max"): width of the window. If "max", will take up the entire screen.
+  * `options.height` (number/"max"): height of the window. If "max", will take up the entire screen.
   * `options.row` (number): row from top where window starts
   * `options.col` (number): column from left where window starts
   * `options.relative` ('win', 'editor', 'cursor'): window position relative to
